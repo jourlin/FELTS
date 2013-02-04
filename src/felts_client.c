@@ -1,7 +1,7 @@
 /* 
   felts_client.c : Client for the Fast Extractor for Large Term Sets 
 
-    Copyright (C) 2012  Pierre Jourlin
+    Copyright (C) 2012-13  Pierre Jourlin
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ***********************************************************************************
   felts_client.c : Client pour l'Extracteur Rapide pour Grands Ensembles de Termes
 
-  Copyright (C) 2012 Pierre Jourlin — Tous droits réservés.
+  Copyright (C) 2012-2013 Pierre Jourlin — Tous droits réservés.
  
   Ce programme est un logiciel libre ; vous pouvez le redistribuer ou le
   modifier suivant les termes de la “GNU General Public License” telle que
@@ -55,7 +55,7 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
-#define BUFFERMAXLENGTH	(5*1024*1024)
+#include "felts.h"
 
 void error(const char *msg)
 {
