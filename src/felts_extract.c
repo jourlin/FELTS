@@ -121,15 +121,22 @@ void NormaliseUTF8(unsigned char *buffer)
 		
 }
 
+unsigned char * skip_blanks(unsigned char *s)
+{
+	while(*s==' '||*s=='\t')
+		s++;
+	return s;
+}
+
 void serve_client(int fdClient)
 {
 
 	unsigned char *eterm, term[LINEMAXLENGTH];	/* pointers to start and end of term */
 	FILE * in, * out;
   	unsigned char word[LINEMAXLENGTH];
-	unsigned char input[LINEMAXLENGTH], *current;
+	unsigned char *current;
 	unsigned char buffer[BUFFERMAXLENGTH];
-
+	int pos;
   	int fd2;
   
   	if((in  = fdopen(fdClient,"r"))==NULL) {
@@ -138,33 +145,36 @@ void serve_client(int fdClient)
 	}
 	fd2 = dup(fdClient);
 	out = fdopen(fd2, "w");
-	input[0]='\0';
+
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
 		current=buffer;			/* initialize current character */
+		current=skip_blanks(current);
 		while(sscanf(current,"%s", word)!=EOF) { /* For each possible term beginning */
 			eterm=FindLonguestTerm(current);
 			if(eterm==NULL){	/* Next word */
 				current+= strlen(word)+1;
+				current=skip_blanks(current);
 			}
 			else {	/* A term was found */
-				strncpy(term+2, current, eterm-current);
+				strncpy(term+1, current, eterm-current);
+				pos= current-buffer;
 				term[eterm-current+1]='\0';
-				term[0]=term[1]='[';
+				term[0]='"';
 				while(term[strlen(term)-1]==' '||term[strlen(term)-1]=='\n') /* remove trailing blanks */
 					term[strlen(term)-1]='\0';
-				term[strlen(term)+2]='\0';
-				term[strlen(term)]=term[strlen(term)+1]=']';
-				printf("Sending %s\n", term);			
-				strcat(input, term);
-				strcat(input,"\n");	
+				term[strlen(term)+1]='\0';
+				term[strlen(term)]='"';
+				printf("Sending %d, %s\n", pos, term);
+				fprintf(out, "%d,\t%s\n", pos, term);	
+				fflush(out);		
 				current=eterm;
+				current=skip_blanks(current);	
 			}
 		}
-		if(input[0]=='\0')
-			strcat(input,"\n");
-		fprintf(out, "%s", input);
-		fflush(out);
+		printf("End of line\n");
+		fprintf(out,"\n"); /* end of response */
+		fflush(out); 
 	}		
 	
 	fclose(in);

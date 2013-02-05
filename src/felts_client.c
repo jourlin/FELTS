@@ -68,8 +68,10 @@ int main(int argc, char *argv[])
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-
     char buffer[BUFFERMAXLENGTH];
+    char response[BUFFERMAXLENGTH], *current;
+    unsigned int ligne=0;
+
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
@@ -96,14 +98,26 @@ int main(int argc, char *argv[])
 	bzero(buffer,BUFFERMAXLENGTH);
     	if(fgets(buffer,BUFFERMAXLENGTH-1,stdin)==NULL)
 		break;
+	ligne++;
     	n = write(sockfd,buffer,strlen(buffer));
     	if (n < 0) 
          	error("ERROR writing to socket");
-    	bzero(buffer,BUFFERMAXLENGTH);
-    	n = read(sockfd,buffer,BUFFERMAXLENGTH-1);
-    	if (n < 0) 
-        	 error("ERROR reading from socket");
-    	printf("%s",buffer);
+	response[0]='\0';
+	do{
+    		bzero(buffer,BUFFERMAXLENGTH);
+		n = read(sockfd,buffer,BUFFERMAXLENGTH-1);
+    		if (n < 0) 
+        		 error("ERROR reading from socket");
+		strncat(response, buffer, n);
+	}while(n>=0 && (strstr(response,"\n\n")==NULL));
+	response[strlen(response)-1]='\0';
+	current=response;
+	while(*current!='\0'){
+		printf("%d,\t", ligne);
+		while(*current!='\n')
+			printf("%c", *current++);
+		printf("%c", *current++); 		/* Carriage return */
+	}
     }
     close(sockfd);
     return 0;
