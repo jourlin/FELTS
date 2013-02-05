@@ -93,6 +93,34 @@ unsigned char* FindLonguestTerm(char * start)
 	return longuest;
 }
 
+void NormaliseUTF8(unsigned char *buffer)
+{
+	static unsigned char from[]= ".;,:!?\"ABCDEFGHIJKLMNOPQRSTUVWXYZÅÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ";
+	static unsigned char to[]=    "       abcdefghijklmnopqrstuvwxyzåâáàäêéèëïíîöóôöúùûñç";
+	unsigned char in[5];
+	unsigned char *where;
+	unsigned int nbytes, i;
+	
+	while(*buffer!='\0')	{
+		if ((*buffer>=192) && (*buffer<224)) 		/* 2-bytes char */
+			nbytes=2;
+		else if ((*buffer>=224) && (*buffer<240))  	/* 3-bytes char */
+			nbytes=3;
+		else if (*buffer>=240)  			/* 4-bytes char */
+			nbytes=4;
+		else 						/* 1-byte char	*/
+			nbytes=1;
+		in[nbytes]='\0';	/* copy current char in string 'in' */
+		for(i=0; (i<nbytes) && (*buffer!='\0'); i++)
+			in[i]=*buffer++;
+		where=strstr(from, in);	/* Try and find current char */
+		if(where != NULL) 	/* found it, then translate */
+			strncpy(buffer-nbytes, to+(where-from), nbytes);	
+		
+	}
+		
+}
+
 void serve_client(int fdClient)
 {
 
@@ -112,6 +140,7 @@ void serve_client(int fdClient)
 	out = fdopen(fd2, "w");
 	input[0]='\0';
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
+		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
 		current=buffer;			/* initialize current character */
 		while(sscanf(current,"%s", word)!=EOF) { /* For each possible term beginning */
 			eterm=FindLonguestTerm(current);
