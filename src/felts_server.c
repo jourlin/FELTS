@@ -192,6 +192,8 @@ int main(int argc, char *argv[])
 		#endif
 
 		cchar=fgetc(DictFile);
+		if(cchar=='\047')			/* tranforms simple quotes in spaces */
+			cchar=' ';
 		if(cchar=='\n'||cchar==' ')
 		{
 			if(nbwords%500000==0)
@@ -239,6 +241,14 @@ int main(int argc, char *argv[])
 	{
 		if(fgets(input, LINEMAXLENGTH, DictFile)==NULL)
 			break;
+					/* Turn simple quotes into spaces */
+		current=input;
+		while(*current!='\0'){
+			if(*current=='\047')
+				*current=' ';
+			current++;
+		};
+					/* Process Term */
 		nbterms++;
 #ifdef DEBUG
 		if(nbterms>1000) 

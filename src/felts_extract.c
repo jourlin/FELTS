@@ -95,8 +95,8 @@ unsigned char* FindLonguestTerm(char * start)
 
 void NormaliseUTF8(unsigned char *buffer)
 {
-	static unsigned char from[]= ".;,:!?\"ABCDEFGHIJKLMNOPQRSTUVWXYZÅÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ";
-	static unsigned char to[]=    "       abcdefghijklmnopqrstuvwxyzåâáàäêéèëïíîöóôöúùûñç";
+	static unsigned char from[]= "\047.;,:!?\042ABCDEFGHIJKLMNOPQRSTUVWXYZÅÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ";
+	static unsigned char to[]=         "        abcdefghijklmnopqrstuvwxyzåâáàäêéèëïíîöóôöúùûñç";
 	unsigned char in[5];
 	unsigned char *where;
 	unsigned int nbytes, i;
@@ -138,7 +138,7 @@ void serve_client(int fdClient)
 	unsigned char buffer[BUFFERMAXLENGTH];
 	int pos;
   	int fd2;
-  
+  	int AtLeastOneTerm;
   	if((in  = fdopen(fdClient,"r"))==NULL) {
 		perror("While opening fdClient for reading ");
 		exit(EXIT_FAILURE);
@@ -147,9 +147,15 @@ void serve_client(int fdClient)
 	out = fdopen(fd2, "w");
 
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
+		if(buffer[0]=='\0'){		/* do not process empty lines */
+			fprintf(out,"\n"); 
+			fflush(out); 
+			continue;	   /* Process next line */
+		}
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
 		current=buffer;			/* initialize current character */
 		current=skip_blanks(current);
+		AtLeastOneTerm=FALSE;
 		while(sscanf(current,"%s", word)!=EOF) { /* For each possible term beginning */
 			eterm=FindLonguestTerm(current);
 			if(eterm==NULL){	/* Next word */
@@ -157,6 +163,7 @@ void serve_client(int fdClient)
 				current=skip_blanks(current);
 			}
 			else {	/* A term was found */
+				AtLeastOneTerm=TRUE;
 				strncpy(term+1, current, eterm-current);
 				pos= current-buffer;
 				term[eterm-current+1]='\0';
@@ -172,7 +179,8 @@ void serve_client(int fdClient)
 				current=skip_blanks(current);	
 			}
 		}
-		printf("End of line\n");
+		if(!AtLeastOneTerm)
+			fprintf(out,"\n"); 
 		fprintf(out,"\n"); /* end of response */
 		fflush(out); 
 	}		

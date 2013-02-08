@@ -7,14 +7,19 @@
 <center>
 
 <form action="demo.php" method="post">
-<h2>Input :</h2><br> <textarea name="textin" cols="80" rows="8" wrap="physical"></textarea>
+<h2>Input :</h2><br> <textarea name="textin" cols="80" rows="8" wrap="physical">
+<?
+if (isset($_POST['Sent']))
+	echo $_POST['textin'];
+?>
+</textarea>
 <br>
 <input type="submit" value="valider" name="Sent">
 </form>
 <?php
 
 	$host="localhost";
-	$port="11111"; 
+	$port="11112"; 
 	
 	if (isset($_POST['Sent']))
 	{

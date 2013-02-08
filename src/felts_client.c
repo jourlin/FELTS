@@ -113,10 +113,13 @@ int main(int argc, char *argv[])
 	response[strlen(response)-1]='\0';
 	current=response;
 	while(*current!='\0'){
-		printf("%d,\t", ligne);
-		while(*current!='\n')
-			printf("%c", *current++);
-		printf("%c", *current++); 		/* Carriage return */
+		if(*current!='\n'){ 				/* No term, no output */
+			printf("%d,\t", ligne);
+			while(*current!='\n')
+				printf("%c", *current++);
+			printf("%c", *current); 		/* Carriage return */
+		}
+		current++;
 	}
     }
     close(sockfd);
