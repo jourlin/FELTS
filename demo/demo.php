@@ -53,6 +53,10 @@ if (isset($_POST['Sent']))
 				fwrite($out, "<a href=http://fr.wikipedia.org/wiki/");
 				$entry=substr($terms[$termp+2],2, strlen($terms[$termp+2])-3);
 				$entry=str_replace(" ", "_", $entry);
+				$entry=str_replace("_l_", "_l'", $entry);
+				$entry=str_replace("_d_", "_d'", $entry);
+				if(($entry[0]=='l' OR $entry[0]=='d') && $entry[1]=='_')
+					$entry[1]='\'';
 				fwrite($out, "$entry>");
 				for($i=0; $i < (strlen($entry))-1 ; $i++){
 					fwrite($out, $c);
