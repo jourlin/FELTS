@@ -20,8 +20,8 @@ if (isset($_POST['Sent']))
 <?php
 
 	$host="localhost";
-	$port="11111"; 
-	
+	$port="11113"; 
+	$bin="/home/jourlin/FELTS/bin";	
 	if (isset($_POST['Sent']))
 	{
 		$text = $_POST['textin'];
@@ -33,7 +33,7 @@ if (isset($_POST['Sent']))
 		if($text[strlen($text)-1]!="\n")
 			fwrite($file, "\n");
 		fclose($file);
-		$response=str_replace("\n", ", ",shell_exec("/home/pierre/works/FELTS/bin/felts_client $host $port < $filename"));
+		$response=str_replace("\n", ", ",shell_exec("$bin/felts_client $host $port < $filename| sort -k1n,1n -k2n,2n"));
 		$terms=explode(',', $response);
 		
 		$file=fopen($filename, "r");

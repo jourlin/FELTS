@@ -72,6 +72,7 @@ typedef struct Term {
 
 extern NODE dict;
 extern TERM *thesaurus;
+extern char * GetLastWord(char *word, char * current, char *start);
 
 extern void serve_client (int fd_client);
 extern void send_terms (char textin[]);

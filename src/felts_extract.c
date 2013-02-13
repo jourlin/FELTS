@@ -128,6 +128,57 @@ unsigned char * skip_blanks(unsigned char *s)
 	return s;
 }
 
+void InverseWords(char *line) {
+	static char tmp[BUFFERMAXLENGTH];
+	static char *backward, *forward;
+	static char word[LINEMAXLENGTH];
+
+	backward=line+strlen(line)-1;	/* skip \000 */
+	forward=tmp;
+	if(*backward=='\n')		/* skip \n   */
+		backward--;
+	while(*backward==' ')		/* skip left spaces */
+		backward--;
+	while(backward>line) {
+		backward=GetLastWord(word, backward, line);
+		strcpy(forward, word);
+		forward+=strlen(word);
+		if(backward>line)
+			*forward++=' ';
+	}
+	*forward='\0';
+	strcpy(line, tmp);	
+}
+
+int CountWords(char *line){
+	int count=0;
+	while(*line==' ')
+		line++; 	/* skip blanks */
+	while(*line!='\0' && *line!='\n'){
+		while(*line!='\0' && *line!=' ') /* skip word */
+			line++;
+		count++;
+		while(*line==' '||*line=='\n')
+			line++; 	/* skip blanks */
+	}
+	return count;
+}
+
+int OffsetWordNumber(char *line, int posword){
+	char *pos=line;
+	while(*pos==' ')
+		pos++; 	/* skip blanks */
+	while(posword!=0 && *pos!='\0'){
+		while(*pos!='\0' && *pos!=' ') /* skip word */
+			pos++;
+		posword--;
+		while(*pos==' ')
+			pos++; 	/* skip blanks */
+	}
+	return pos-line;
+}
+
+
 void serve_client(int fdClient)
 {
 
@@ -136,7 +187,8 @@ void serve_client(int fdClient)
   	unsigned char word[LINEMAXLENGTH];
 	unsigned char *current;
 	unsigned char buffer[BUFFERMAXLENGTH];
-	int pos;
+	unsigned char invbuffer[BUFFERMAXLENGTH];
+	int pos, posword;
   	int fd2;
   	int AtLeastOneTerm;
   	if((in  = fdopen(fdClient,"r"))==NULL) {
@@ -153,27 +205,33 @@ void serve_client(int fdClient)
 			continue;	   /* Process next line */
 		}
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
-		current=buffer;			/* initialize current character */
+		strcpy(invbuffer, buffer);
+		InverseWords(invbuffer);		/* Read words for right to left */
+		//printf("**%s**\n", invbuffer);
+		current=invbuffer;			/* initialize current character */
 		current=skip_blanks(current);
 		AtLeastOneTerm=FALSE;
+		posword=0;
 		while(sscanf(current,"%s", word)!=EOF) { /* For each possible term beginning */
 			eterm=FindLonguestTerm(current);
 			if(eterm==NULL){	/* Next word */
 				current+= strlen(word)+1;
 				current=skip_blanks(current);
+				posword++;
 			}
 			else {	/* A term was found */
 				AtLeastOneTerm=TRUE;
-				strncpy(term+1, current, eterm-current);
-				pos= current-buffer;
-				term[eterm-current+1]='\0';
-				term[0]='"';
+				strncpy(term, current, eterm-current);
+				term[eterm-current]='\0';
 				while(term[strlen(term)-1]==' '||term[strlen(term)-1]=='\n') /* remove trailing blanks */
 					term[strlen(term)-1]='\0';
-				term[strlen(term)+1]='\0';
-				term[strlen(term)]='"';
-				printf("Sending %d, %s\n", pos, term);
-				fprintf(out, "%d,\t%s\n", pos, term);	
+				term[strlen(term)]='\0';
+				pos=OffsetWordNumber(buffer,CountWords(buffer)-CountWords(term)-posword);
+				posword=posword+CountWords(term);
+				//printf("Original term: *%s*\n", term);
+				InverseWords(term);
+				printf("Sending %d, \"%s\" posword %d %d %d\n", pos, term, CountWords(buffer),CountWords(term),posword);
+				fprintf(out, "%d,\t\"%s\"\n", pos, term);	
 				fflush(out);		
 				current=eterm;
 				current=skip_blanks(current);	

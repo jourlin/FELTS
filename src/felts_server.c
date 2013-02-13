@@ -132,6 +132,23 @@ void usage(char prog[])
             DEFAULT_PORT, DEFAULT_DIC);
 }
 
+char * GetLastWord(char *word, char * current, char *start)
+{
+	int i=0;
+	while(current>=start && *current!=' '){
+		current--;
+		i++;
+	};
+	current++;	/* current points to the first character of current word */
+	strncpy(word, current, i);
+	word[i]='\0';
+	if(current!=start)
+		current--;
+	while((current>=start) && *current==' ')
+		current--; 
+	return current;
+}
+
 /* -------------------------------------------------------------*/
 
 int main(int argc, char *argv[])
@@ -254,17 +271,22 @@ int main(int argc, char *argv[])
 		if(nbterms>1000) 
 			break;
 #endif
-		current=input;
-		sscanf(current,"%s", word);
-		current+= strlen(word)+1;
+		
+		
+		current=input+strlen(input)-2; /* -2 allows to ignore terminal \n\000 */
+		current=GetLastWord(word, current, input);
+		printf("%s ", word);
 		nbwords=DictFind(word, &dict); /* identify current word */
 		thesaurus[nbwords].wordid=nbwords;
-		tnode=&thesaurus[nbwords];
-		while(sscanf(current,"%s", word)!=EOF)
+		tnode=&thesaurus[nbwords];	
+		/* current points to the last word's last character of current term */
+		while(current>input) /* get words from right to left */
 		{
+			current=GetLastWord(word, current, input);
+			printf("%s ", word);
 			tnode=FindOrCreateNextAlternative(tnode, DictFind(word, &dict));
-			current+= strlen(word)+1;
 		}
+		printf("\n");
 		tnode->isfinal=TRUE;
 		if(nbterms%1000000==0)
 			printf("Thesaurus loaded with %ld terms (%ld Mb)\n", nbterms, bytecount/1024/1024);
