@@ -20,12 +20,13 @@ if (isset($_POST['Sent']))
 <?php
 
 	$host="localhost";
-	$port="11113"; 
-	$bin="/home/jourlin/FELTS/bin";	
+	$port="11111"; 
+	$bin="/home/pierre/works/FELTS/bin";	
 	if (isset($_POST['Sent']))
 	{
 		$text = $_POST['textin'];
 		$text = str_replace("\r"," ", $text);
+		$text = str_replace("’","'", $text);
 		echo "<h2>Sortie / Output :</h2><br>\n"; 
 		$filename="/tmp/".$_SERVER['REMOTE_ADDR'].".".time().".feltsin.csv";
 		$file=fopen($filename, "w+");
@@ -76,7 +77,7 @@ if (isset($_POST['Sent']))
 ?>
 <hr>
 <I>
-FELTS est un logiciel qui permet d'extraire rapidement dans un texte tous les termes présents dans un grand ensemble de termes. Quand plusieurs options se présentent, il extrait le terme le plus long présent dans l'ensemble (i.e. la séquence la plus longue en mots présente dans l'ensemble). Il a été testé avec succès sur 5 millions de termes distincts composés de mots issus d'un dictionnaire de 2 millions d'entrées distinctes : les titres des pages de Wikipédia en français (format de caractères UTF-8) et de Wikipédia en anglais (format ASCII).
+FELTS est un logiciel qui permet d'extraire rapidement dans un texte tous les termes présents dans un grand ensemble de termes. Quand plusieurs options se présentent, il extrait le terme le plus long présent dans l'ensemble (i.e. la séquence la plus longue en mots présente dans l'ensemble). Il a été testé avec succès sur plus de 3 millions de termes distincts composés de mots issus d'un dictionnaire de 2 millions d'entrées distinctes : les titres des pages de Wikipédia en français (format de caractères UTF-8) et de Wikipédia en anglais (format ASCII).
 
 FELTS fonctionne pour toutes les langues disposant d'un alphabet en UTF-8 et peut-être donc permettre d'extraire dans un corpus de texte chaque occurrence de toute entité méritant un article encyclopédique du point de vue des contributeurs de Wikipédia.
 
@@ -90,7 +91,7 @@ Le code source est disponible sur Github avec les conditions d'utilisation, modi
 <I>
 FELTS is a software allowing to quickly extract from a text all the terms belonging to a large set of terms.
 
-When there are several options for term detection, it extracts the longest term present in the set (i.e. the word sequence that contains the highest number of words). It was successfully tested with over 5 millions of distinct terms composed of over 2 millions of distinct words : page titles of the French Wikipedia (in UTF-8 character set) and of the English Wikipedia (in ASCII character set).
+When there are several options for term detection, it extracts the longest term present in the set (i.e. the word sequence that contains the highest number of words). It was successfully tested with over 3 millions of distinct terms composed of over 2 millions of distinct words : page titles of the French Wikipedia (in UTF-8 character set) and of the English Wikipedia (in ASCII character set).
 
 FELTS works in all languages those alphabet can be coded in UTF-8. Provided with a text corpus, it thus can perform the extraction of every occurrence of all entity that Wikipedia contributors found worth of an encyclopedic article.
 

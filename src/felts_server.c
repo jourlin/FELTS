@@ -275,7 +275,6 @@ int main(int argc, char *argv[])
 		
 		current=input+strlen(input)-2; /* -2 allows to ignore terminal \n\000 */
 		current=GetLastWord(word, current, input);
-		printf("%s ", word);
 		nbwords=DictFind(word, &dict); /* identify current word */
 		thesaurus[nbwords].wordid=nbwords;
 		tnode=&thesaurus[nbwords];	
@@ -283,10 +282,8 @@ int main(int argc, char *argv[])
 		while(current>input) /* get words from right to left */
 		{
 			current=GetLastWord(word, current, input);
-			printf("%s ", word);
 			tnode=FindOrCreateNextAlternative(tnode, DictFind(word, &dict));
 		}
-		printf("\n");
 		tnode->isfinal=TRUE;
 		if(nbterms%1000000==0)
 			printf("Thesaurus loaded with %ld terms (%ld Mb)\n", nbterms, bytecount/1024/1024);
