@@ -18,10 +18,11 @@ if (isset($_POST['Sent']))
 <input type="submit" value="valider/validate" name="Sent">
 </form>
 <?php
+	$stopwords =array("au",  "aux",  "avec",  "ce",  "ces",  "dans",  "de",  "des",  "du",  "elle",  "en",  "et",  "eux",  "il",  "je",  "la",  "le",  "leur",  "lui",  "ma",  "mais",  "me",  "même",  "mes",  "moi",  "mon",  "ne",  "nos",  "notre",  "nous",  "on",  "ou",  "par",  "pas",  "pour",  "qu",  "que",  "qui",  "sa",  "se",  "ses",  "son",  "sur",  "ta",  "te",  "tes",  "toi",  "ton",  "tu",  "un",  "une",  "vos",  "votre",  "vous",  "c",  "d",  "j",  "l",  "à",  "m",  "n",  "s",  "t",  "y",  "été",  "étée",  "étées",  "étés",  "étant",  "étante",  "étants",  "étantes",  "suis",  "es",  "est",  "sommes",  "êtes",  "sont",  "serai",  "seras",  "sera",  "serons",  "serez",  "seront",  "serais",  "serait",  "serions",  "seriez",  "seraient",  "étais",  "était",  "étions",  "étiez",  "étaient",  "fus",  "fut",  "fûmes",  "fûtes",  "furent",  "sois",  "soit",  "soyons",  "soyez",  "soient",  "fusse",  "fusses",  "fût",  "fussions",  "fussiez",  "fussent",  "ayant",  "ayante",  "ayantes",  "ayants",  "eu",  "eue",  "eues",  "eus",  "ai",  "as",  "avons",  "avez",  "ont",  "aurai",  "auras",  "aura",  "aurons",  "aurez",  "auront",  "aurais",  "aurait",  "aurions",  "auriez",  "auraient",  "avais",  "avait",  "avions",  "aviez",  "avaient",  "eut",  "eûmes",  "eûtes",  "eurent",  "aie",  "aies",  "ait",  "ayons",  "ayez",  "aient",  "eusse",  "eusses",  "eût",  "eussions",  "eussiez",  "eussent");
 
-	$host="localhost";
+	$host="caracole.univ-avignon.fr";
 	$port="11111"; 
-	$bin="/home/pierre/works/FELTS/bin";	
+	$bin="/home/jourlin/FELTS/bin";	
 	if (isset($_POST['Sent']))
 	{
 		$text = $_POST['textin'];
@@ -50,7 +51,7 @@ if (isset($_POST['Sent']))
 				fwrite($out, "<br>\n");
 			}
 			else
-			if($ligne==$terms[$termp] && $col==$terms[$termp+1]){
+			if($ligne==$terms[$termp] && $col==$terms[$termp+1] && !in_array(substr($terms[$termp+2],2, strlen($terms[$termp+2])-3), $stopwords)){
 				fwrite($out, "<a href=http://fr.wikipedia.org/wiki/");
 				$entry=substr($terms[$termp+2],2, strlen($terms[$termp+2])-3);
 				$entry=str_replace(" ", "_", $entry);
