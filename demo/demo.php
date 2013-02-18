@@ -16,7 +16,7 @@ if (isset($_POST['Sent']))
 ?>
 </textarea>
 <br>
-<input type="checkbox" checked="checked"
+<input type="checkbox" 
 <?php if(isset($_POST['singleword']))
         echo ' checked="checked" ';
 ?>
@@ -73,7 +73,7 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
 					$entry=str_replace(" ", "_", $entry);
 					fwrite($out, "$entry>");
 				}
-				for($i=0; $i < (strlen($entry))-1 ; $i++){
+				for($i=0; $c!='\n' && $i < (strlen($entry))-1 ; $i++){
 					fwrite($out, $c);
 					$col++;
 					$c=fread($file,1);
@@ -85,6 +85,8 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
 				$col++;
 			}
 			else {
+				if($ligne>$terms[$termp])
+					$termp+=3;
 				fwrite($out, $c);
 				$col++;
 			}
