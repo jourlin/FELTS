@@ -7,7 +7,7 @@
 <center>
 <H1>Extracteur Rapide pour Grands Ensembles de Termes (FELTS) / 
 Fast Extractor for Large Term Sets (FELTS)</H1>
-<form action="demo.php" method="post">
+<form action="<?php $_SERVER["PHP_SELF"]?>" method="post">
 <h2>Entrez un texte et cliquez sur "Valider"/ Enter a text and click "Validate" :</h2><br> 
 <textarea name="textin" cols="80" rows="8" wrap="physical">
 <?php
@@ -68,19 +68,21 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
 			else
 			if($ligne==$terms[$termp] && $col==$terms[$termp+1]){
 				$entry=substr($terms[$termp+2],2, strlen($terms[$termp+2])-3);
+				$orig_term="";
+				for($i=0; $c!='\n' && $i < (strlen($entry)) ; $i++){
+                                        $orig_term=$orig_term.$c;
+                                        $col++;
+                                        $c=fread($file,1);
+                                };
 				if(!isset($_POST['stopwords']) || !isset($stopwords[$entry])){
 					fwrite($out, "<a href=http://fr.wikipedia.org/wiki/");
-					$entry=str_replace(" ", "_", $entry);
-					fwrite($out, "$entry>");
+					$wikilink=str_replace(" ", "_", $orig_term);
+					fwrite($out, "$wikilink>");
 				}
-				for($i=0; $c!='\n' && $i < (strlen($entry))-1 ; $i++){
-					fwrite($out, $c);
-					$col++;
-					$c=fread($file,1);
-				};
-				fwrite($out, $c);
+				fwrite($out, $orig_term);
 				if(!isset($_POST['stopwords']) || !isset($stopwords[$entry])) 
 					fwrite($out, "</a>");
+				fwrite($out, $c);
 				$termp+=3;
 				$col++;
 			}
