@@ -10,19 +10,19 @@ Fast Extractor for Large Term Sets (FELTS)</H1>
 <form action="demo.php" method="post">
 <h2>Entrez un texte et cliquez sur "Valider"/ Enter a text and click "Validate" :</h2><br> 
 <textarea name="textin" cols="80" rows="8" wrap="physical">
-<?
+<?php
 if (isset($_POST['Sent']))
 	echo $_POST['textin'];
 ?>
 </textarea>
 <br>
 <input type="checkbox"
-<? if(isset($_POST['singleword']))
+<?php if(isset($_POST['singleword']))
         echo ' checked="checked" ';
 ?>
 name="singleword" value="yes">sans les termes à un seul mot / without single-word terms<br>
 <input type="checkbox" 
-<? if(isset($_POST['stopwords']))
+<?php if(isset($_POST['stopwords']))
 	echo ' checked="checked" '; 
 ?> 
 name="stopwords" value="yes">sans les mots-outils / without stop words<br> 
@@ -31,9 +31,9 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
 <?php
 	$stopwords =array_flip(array("au", "aucun", "aucune", "aucuns", "aucunes", "aux",  "avec",  "ce",  "ces",  "dans",  "de",  "des",  "du",  "elle",  "en",  "et",  "eux",  "il",  "je",  "la",  "le",  "les", "leur",  "lui",  "ma",  "mais",  "me",  "même",  "mes",  "moi",  "mon",  "ne",  "nos",  "notre",  "nous",  "on",  "ou",  "par",  "pas", "plus", "plus de",  "pour",  "qu",  "que",  "qui",  "sa",  "se",  "ses",  "son",  "sur",  "ta",  "te",  "tes",  "toi",  "ton", "tous", "tout", "toute", "toutes",  "tu",  "un",  "une",  "vos",  "votre",  "vous", "c",  "d",  "j",  "l",  "à",  "m",  "n",  "s",  "t",  "y",  "été",  "étée",  "étées",  "étés",  "étant",  "étante",  "étants",  "étantes",  "suis",  "es",  "est",  "sommes",  "êtes",  "sont",  "serai",  "seras",  "sera",  "serons",  "serez",  "seront",  "serais",  "serait",  "serions",  "seriez",  "seraient",  "étais",  "était",  "étions",  "étiez",  "étaient",  "fus",  "fut",  "fûmes",  "fûtes",  "furent",  "sois",  "soit",  "soyons",  "soyez",  "soient",  "fusse",  "fusses",  "fût",  "fussions",  "fussiez",  "fussent",  "ayant",  "ayante",  "ayantes",  "ayants",  "eu",  "eue",  "eues",  "eus",  "ai",  "as",  "avons",  "avez",  "ont",  "aurai",  "auras",  "aura",  "aurons",  "aurez",  "auront",  "aurais",  "aurait",  "aurions",  "auriez",  "auraient",  "avais",  "avait",  "avions",  "aviez",  "avaient",  "eut",  "eûmes",  "eûtes",  "eurent",  "aie",  "aies",  "ait",  "ayons",  "ayez",  "aient",  "eusse",  "eusses",  "eût",  "eussions",  "eussiez",  "eussent"));
 
-	$host="caracole.univ-avignon.fr";
+	$host="localhost";
 	$port="11111"; 
-	$bin="/home/pierre/works/FELTS/bin";	
+	$bin="/home/lia/jourlin/FELTS/bin";	
 	
 	if (isset($_POST['Sent']))
 	{
