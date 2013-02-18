@@ -16,7 +16,7 @@ if (isset($_POST['Sent']))
 ?>
 </textarea>
 <br>
-<input type="checkbox"
+<input type="checkbox" checked="checked"
 <?php if(isset($_POST['singleword']))
         echo ' checked="checked" ';
 ?>
