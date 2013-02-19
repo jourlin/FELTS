@@ -7,6 +7,9 @@
 <center>
 <H1>Extracteur Rapide pour Grands Ensembles de Termes (FELTS) / 
 Fast Extractor for Large Term Sets (FELTS)</H1>
+<i><small>Cet extracteur de termes est basé sur les titres de pages de fr.wikipedia.org et en.wikipedia.org (soit 6.468.450 termes distincts composés de 3.014.046 mots distincts).<br>
+This term extractor is based on page'titles of fr.wikipedia.org and en.wikipedia.org (i.e. 6,468,450 distinct terms composed from 3,014046 distinct words).
+</small></i>
 <form action="<?php $_SERVER["PHP_SELF"]?>" method="post">
 <h2>Entrez un texte et cliquez sur "Valider"/ Enter a text and click "Validate" :</h2><br> 
 <textarea name="textin" cols="80" rows="8" wrap="physical">
@@ -15,6 +18,11 @@ if (isset($_POST['Sent']))
 	echo $_POST['textin'];
 ?>
 </textarea>
+<br>
+<select name="language" id="language">
+<option value='fr' <?php if($_POST['language']=="fr") {echo "selected='selected'";}?>>français</option>
+<option value='en' <?php if($_POST['language']=="en") {echo "selected='selected'";}?>>english</option>
+</select>
 <br>
 <input type="checkbox" 
 <?php if(isset($_POST['singleword']))
@@ -32,7 +40,7 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
 	$stopwords =array_flip(array("au", "aucun", "aucune", "aucuns", "aucunes", "aux",  "avec",  "ce",  "ces",  "dans",  "de",  "des",  "du",  "elle",  "en",  "et",  "eux",  "il",  "je",  "la",  "le",  "les", "leur",  "lui",  "ma",  "mais",  "me",  "même",  "mes",  "moi",  "mon",  "ne",  "nos",  "notre",  "nous",  "on",  "ou",  "par",  "pas", "plus", "plus de",  "pour",  "qu",  "que",  "qui",  "sa",  "se",  "ses",  "son",  "sur",  "ta",  "te",  "tes",  "toi",  "ton", "tous", "tout", "toute", "toutes",  "tu",  "un",  "une",  "vos",  "votre",  "vous", "c",  "d",  "j",  "l",  "à",  "m",  "n",  "s",  "t",  "y",  "été",  "étée",  "étées",  "étés",  "étant",  "étante",  "étants",  "étantes",  "suis",  "es",  "est",  "sommes",  "êtes",  "sont",  "serai",  "seras",  "sera",  "serons",  "serez",  "seront",  "serais",  "serait",  "serions",  "seriez",  "seraient",  "étais",  "était",  "étions",  "étiez",  "étaient",  "fus",  "fut",  "fûmes",  "fûtes",  "furent",  "sois",  "soit",  "soyons",  "soyez",  "soient",  "fusse",  "fusses",  "fût",  "fussions",  "fussiez",  "fussent",  "ayant",  "ayante",  "ayantes",  "ayants",  "eu",  "eue",  "eues",  "eus",  "ai",  "as",  "avons",  "avez",  "ont",  "aurai",  "auras",  "aura",  "aurons",  "aurez",  "auront",  "aurais",  "aurait",  "aurions",  "auriez",  "auraient",  "avais",  "avait",  "avions",  "aviez",  "avaient",  "eut",  "eûmes",  "eûtes",  "eurent",  "aie",  "aies",  "ait",  "ayons",  "ayez",  "aient",  "eusse",  "eusses",  "eût",  "eussions",  "eussiez",  "eussent"));
 
 	$host="localhost";
-	$port="11111"; 
+	$port="11112"; 
 	$bin="/home/lia/jourlin/FELTS/bin";	
 	
 	if (isset($_POST['Sent']))
@@ -75,7 +83,7 @@ name="stopwords" value="yes">sans les mots-outils / without stop words<br>
                                         $c=fread($file,1);
                                 };
 				if(!isset($_POST['stopwords']) || !isset($stopwords[$entry])){
-					fwrite($out, "<a href=http://fr.wikipedia.org/wiki/");
+					fwrite($out, "<a href=http://".$_POST['language'].".wikipedia.org/wiki/");
 					$wikilink=str_replace(" ", "_", $orig_term);
 					fwrite($out, "$wikilink>");
 				}
