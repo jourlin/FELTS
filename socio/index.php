@@ -31,7 +31,7 @@ table td {
 -->
 </style>
 <meta charset="utf-8" />
-<title>Analyse d'entités wikipedia</title>
+<title>Analyse thématique basée sur les entités issues wikipedia</title>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css" />
 <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
@@ -46,16 +46,16 @@ $(function() {
 </script>
 </head>
 <body>
-<center><h1>Analyse d'entités wikipedia</h1></center>
+<center><h1>Comparateur d'entretiens</h1></center>
 <span>
 <?php
 require("param.inc.php");
 
-$connexion = @pg_connect("host=$host user=$user dbname=$dbname password=$mdp") ;
+$connexion = @pg_connect("host=$pg_host user=$pg_user dbname=$pg_dbname password=$pg_mdp") ;
 if ($connexion)
-  echo "<!-- Successful connection of user $user to host $host --><br>";
+  echo "<!-- Successful connection of user $pg_user to host $pg_host --><br>";
 else
-  echo "Unsuccessful connection to host $host";
+  echo "Unsuccessful connection to host $pg_host";
 
 // Process a new record 
 if(isset($_POST['submit']))
@@ -109,16 +109,45 @@ if(isset($_POST['submit']))
 			$result = move_uploaded_file($_FILES['content']['tmp_name'],$filename);
 			if ($result){ 
 				echo '<center><font color="green">*** tranfert réussi ***</font></center><br>';
-				if($_POST['interviewed']!="newinterviewed" && $_POST['interviewer']!="newinterviewer"){
-					list($month, $day, $year) = explode("/", $_POST['date']);
-    					$date = $year."-".$month."-".$day;					
-					$request = 'INSERT INTO "Entretien" (date, interviewed, interviewer, content) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."', 'test');";
+				list($month, $day, $year) = explode("/", $_POST['date']);
+    				$date = $year."-".$month."-".$day;					
+				$content=pg_escape_string(file_get_contents($filename));
+// Inserts new person
+
+				if($_POST['interviewed']=="newinterviewed"){
+					$request = 'INSERT INTO "Individu" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamed']."', '".$_POST['lastnamed']."');";
 					$result =  pg_query($request);
 					if (!$result) 
-						echo '<center><font color="red">Erreur lors de l\'insertion dans la base de données !</font></center><br>';
-					
+						echo '<center><font color="red">Erreur lors de l\'insertion d\'un enquêté dans la base de données !</font></center><br>';
+					$last_id_query = pg_query('SELECT last_value FROM "Individu_id_seq";');
+					$row=pg_fetch_row($last_id_query);			
+					$_POST['interviewed'] = $row[0];		// Id of new person	
 				}
-				
+				if($_POST['interviewer']=="newinterviewer"){
+					$request = 'INSERT INTO "Individu" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamer']."', '".$_POST['lastnamer']."');";
+
+					$result =  pg_query($request);
+					if (!$result) 
+						echo '<center><font color="red">Erreur lors de l\'insertion d\'un enquêteur dans la base de données !</font></center><br>';
+					$last_id_query = pg_query('SELECT last_value FROM "Individu_id_seq";');
+					$row=pg_fetch_row($last_id_query);			
+					$_POST['interviewer'] = $row[0];		// Id of new person	
+
+				}
+
+// Insert a new interview
+				$request = 'INSERT INTO "Entretien" (date, interviewed, interviewer, content) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."', '".$content."');";
+				$result=pg_query($request);
+				if (!$result) 
+					echo '<center><font color="red">Erreur lors de l\'insertion de l\'entretien dans la base de données !</font></center><br>';	
+				$last_id_query = pg_query('SELECT last_value FROM "Entretien_id_seq";');
+				$row=pg_fetch_row($last_id_query);
+				$CurrentInterview=$row[0];
+				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | cut -f3 | sort | uniq -c| sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
+				if(!pg_copy_from($connexion, '"Entities"', $response, ",")){
+					echo '<center><font color="red">Erreur durant l\'importation des statistiques !<br>'.pg_last_error().'</font></center><br>'; 
+					print_r(error_get_last());
+				}
 			}
 			else
 				echo '<center><font color="red">Erreur durant le transfert du fichier !</font></center><br>';
@@ -137,7 +166,7 @@ Ajouter un entretien :<BR>
 <tr><td><input type="text" name="date" id="datepicker" /></td>
 <td>
 <SELECT name="interviewed">
-<option value="newinterviewed" selected="selected">Existant</option>
+<option value="newinterviewed" selected="selected">Nouveau -></option>
 <?
 	$interviewedq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewed="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewedr =  pg_query($interviewedq);
@@ -148,12 +177,11 @@ Ajouter un entretien :<BR>
 	};
 ?>
 </SELECT>
-ou nouveau:
 <input type="text" name="firstnamed" placeholder="Prénom" size=7 />
 <input type="text" name="lastnamed" placeholder="Nom" size=7 />
 </td><td>
 <SELECT name="interviewer">
-<option value="newinterviewer" selected="selected">Existant</option>
+<option value="newinterviewer" selected="selected">Nouveau -></option>
 <?
 	$interviewerq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewer="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewerr =  pg_query($interviewerq);
@@ -164,7 +192,6 @@ ou nouveau:
 	};
 ?>
 </SELECT>
-ou nouveau:
 <input type="text" name="firstnamer" placeholder="Prénom" size=7 />
 <input type="text" name="lastnamer" placeholder="Nom" size=7 />
 
@@ -189,7 +216,7 @@ else
 	echo "<center><B>La base contient actuellement $row[0] entretiens.</B></center><BR>";
 if($row[0]>0)
 {
-	$request = 'SELECT "Entretien".id, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName" FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id;';
+	$request = 'SELECT "Entretien".id, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id;';
 	$result =  pg_query($request);
 	if(!$result)
 	{
@@ -197,13 +224,16 @@ if($row[0]>0)
 		exit; 
 	}
 	echo "<center>Liste  :";
+	echo '<form method="POST" action="compare.php" enctype="multipart/form-data">';
 	echo "<table>\n";
-	echo "<tr><th>Numéro</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th></tr>";
+	echo "<tr><th>Numéro</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Extrait</th><th>Outils</th></tr>";
 	while ($row = pg_fetch_row($result) )
 		{
-		echo "<tr><td>$row[0]</td><td>$row[1]</td><td>$row[3] $row[2]</td><td>$row[5] $row[4]</td></tr>\n";
+		echo '<tr><td><input type="checkbox" name="documents[]" value="'.$row[0].'">'.$row[0]."</td><td>$row[1]</td><td>$row[3] $row[2]</td><td>$row[5] $row[4]</td><td>$row[6]</td>";
+		echo "<td><a href='./display_doc.php?id=".$row[0]."'>voir</a> ";
+		echo "</tr>\n";
 		};
-	echo "</table></center><BR>\n";
+	echo '</table><INPUT type="submit" name="compare" value="Comparer"></form></center><BR>'."\n";
 }
 ?>
 

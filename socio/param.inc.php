@@ -1,6 +1,9 @@
 <?
-$host="localhost";
-$user="socio";
-$mdp="***";
-$dbname="socio";
+$pg_host="localhost";
+$pg_user="socio";
+$pg_mdp="Hlaeem3f?";
+$pg_dbname="socio";
+$felts_host="caracole.univ-avignon.fr";
+$felts_port=11111;
+$felts_bin="/home/jourlin/FELTS/bin";
 ?>
