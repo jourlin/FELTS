@@ -1,9 +1,10 @@
-<?
+<?php
 $pg_host="localhost";
+$pg_port="5435";
 $pg_user="socio";
-$pg_mdp="****";
+$pg_mdp="*****";
 $pg_dbname="socio";
-$felts_host="caracole.univ-avignon.fr";
-$felts_port=11111;
-$felts_bin="/home/jourlin/FELTS/bin";
+$felts_host="localhost";
+$felts_port=11112;
+$felts_bin="/home/lia/jourlin/FELTS/bin";
 ?>

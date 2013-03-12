@@ -48,14 +48,15 @@ $(function() {
 <body>
 <center><h1>Comparateur d'entretiens</h1></center>
 <span>
-<?php
-require("param.inc.php");
 
-$connexion = @pg_connect("host=$pg_host user=$pg_user dbname=$pg_dbname password=$pg_mdp") ;
+<?php
+require("./param.inc.php");
+
+$connexion = @pg_connect("host=$pg_host port=$pg_port user=$pg_user dbname=$pg_dbname password=$pg_mdp") ;
 if ($connexion)
   echo "<!-- Successful connection of user $pg_user to host $pg_host --><br>";
 else
-  echo "Unsuccessful connection to host $pg_host";
+  echo "Unsuccessful connection to host $pg_host on port $pg_port<br>\n";
 
 // Process a new record 
 if(isset($_POST['submit']))
@@ -110,8 +111,21 @@ if(isset($_POST['submit']))
 			if ($result){ 
 				echo '<center><font color="green">*** tranfert réussi ***</font></center><br>';
 				list($month, $day, $year) = explode("/", $_POST['date']);
-    				$date = $year."-".$month."-".$day;					
-				$content=pg_escape_string(file_get_contents($filename));
+    				$date = $year."-".$month."-".$day;
+function RemoveColored($text){
+	$current=strstr($text, "<font color=");
+	$result="";
+	while($current){
+		$result=$result.substr($text, 0, strlen($text)-strlen($current));
+		$current=strstr($current, "</font>");
+		$text=substr($current,-strlen($current)+7);     // start immediately after </font>
+		$current=strstr($text, "<font color=");		// Repeat search
+	}
+	$result=$result.$text;
+	return $result;
+}					
+				
+				$content=pg_escape_string(strip_tags(RemoveColored(strtolower(file_get_contents($filename)))));
 // Inserts new person
 
 				if($_POST['interviewed']=="newinterviewed"){
@@ -143,8 +157,8 @@ if(isset($_POST['submit']))
 				$last_id_query = pg_query('SELECT last_value FROM "Entretien_id_seq";');
 				$row=pg_fetch_row($last_id_query);
 				$CurrentInterview=$row[0];
-				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | cut -f3 | sort | uniq -c| sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
-				if(!pg_copy_from($connexion, '"Entities"', $response, ",")){
+				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | grep -v ".'\"\"'." | cut -f3 | sort | uniq -c| sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
+				if(!pg_copy_from($connexion, "Entities", $response, "," )){
 					echo '<center><font color="red">Erreur durant l\'importation des statistiques !<br>'.pg_last_error().'</font></center><br>'; 
 					print_r(error_get_last());
 				}
@@ -160,14 +174,14 @@ if(isset($_POST['submit']))
 
 <center>
 Ajouter un entretien :<BR>
-<form method="POST" action="<?$_SERVER['PHP_SELF'] ?>" enctype="multipart/form-data">
+<form method="POST" action="<?php $_SERVER['PHP_SELF'] ?>" enctype="multipart/form-data">
 <table>
 <tr><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Contenu</th></tr>
 <tr><td><input type="text" name="date" id="datepicker" /></td>
 <td>
 <SELECT name="interviewed">
 <option value="newinterviewed" selected="selected">Nouveau -></option>
-<?
+<?php
 	$interviewedq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewed="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewedr =  pg_query($interviewedq);
 	while ($row = pg_fetch_row($interviewedr) )
@@ -182,7 +196,7 @@ Ajouter un entretien :<BR>
 </td><td>
 <SELECT name="interviewer">
 <option value="newinterviewer" selected="selected">Nouveau -></option>
-<?
+<?php
 	$interviewerq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewer="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewerr =  pg_query($interviewerq);
 	while ($row = pg_fetch_row($interviewerr) )
@@ -204,7 +218,7 @@ Ajouter un entretien :<BR>
 </FORM>
 <br>
 </center>
-<?
+<?php
 // Show contents 
 
 $request = 'SELECT count(*) FROM "Entretien"';

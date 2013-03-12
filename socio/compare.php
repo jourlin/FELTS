@@ -43,7 +43,7 @@ table td {
 <?php
 require("param.inc.php");
 
-$connexion = @pg_connect("host=$pg_host user=$pg_user dbname=$pg_dbname password=$pg_mdp") ;
+$connexion = @pg_connect("host=$pg_host port=$pg_port user=$pg_user dbname=$pg_dbname password=$pg_mdp") ;
 if ($connexion)
   echo "<!-- Successful connection of user $pg_user to host $pg_host --><br>";
 else
