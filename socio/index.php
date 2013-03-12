@@ -126,6 +126,10 @@ function RemoveColored($text){
 }					
 				
 				$content=pg_escape_string(strip_tags(RemoveColored(strtolower(file_get_contents($filename)))));
+				if($content[strlen($content)-1]!="\n")
+					$content=$content."\n"; 
+				// (the absence of a newline at the end of file blocks felts_server)
+				file_put_contents($filename, $content);
 // Inserts new person
 
 				if($_POST['interviewed']=="newinterviewed"){
