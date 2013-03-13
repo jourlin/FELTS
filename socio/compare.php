@@ -56,7 +56,7 @@ $maxentities=0;
 echo "<center><table><tr><th>rank</th>";
 foreach($_POST['documents'] as $doc){
 	echo "<th>doc. n°$doc";
-	$request='SELECT to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName" FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id;';
+	$request='SELECT to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName" FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id='.$doc.';';
 	$result =  pg_query($request);
 	$row = pg_fetch_row($result);
 	echo "<br>".$row[0];

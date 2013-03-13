@@ -101,10 +101,15 @@ if(isset($_POST['submit']))
 		echo '<center><font color="red">Vous devez fournir un fichier !</font></center><br>';
 		$errors++;
 	}
+	if(strpos($_FILES['content']['name'], ' ')!==false){
+		echo '<center><font color="red">Le nom de votre fichier ne doit pas contenir d\'espaces. Renommez le fichier en remplaçant les espaces par le caractère "_"</font></center><br>';
+                $errors++;
+	}
 	if($errors==0){
 		$filename="/tmp/".$_SERVER['REMOTE_ADDR'].".".time().".felts";
-		if ($_FILES['content']['error'] > 0) 
-			echo '<center><font color="red">Erreur durant le transfert du fichier !</font></center><br>';
+		if ($_FILES['content']['error'] > 0){ 
+			echo '<center><font color="red">Erreur n°'.$_FILES['content']['error'].' durant le transfert du fichier  "'.$_FILES['content']['name'].'"</font></center><br>';
+		}
 		else
 		{
 			$result = move_uploaded_file($_FILES['content']['tmp_name'],$filename);
@@ -214,7 +219,8 @@ Ajouter un entretien :<BR>
 <input type="text" name="lastnamer" placeholder="Nom" size=7 />
 
 </td><td>
-<input type="hidden" name="MAX_FILE_SIZE" value="100000" />
+<!-- Does not accept files larger than 1MB -->
+<input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
 <input type="file" name="content">
 </td></tr>
 </table>
