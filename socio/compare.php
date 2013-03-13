@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <HTML lang="fr">
 <head>
-<style type="text/css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style type="text/css"> 
 <!--
 table {
 	border-width: 2px 2px 2px 2px;
@@ -18,7 +19,6 @@ table th {
 	border-style: inset inset inset inset;
 	border-color: green green green green;
 	background-color: white;
-	-moz-border-radius: 12px 12px 12px 12px;
 }
 table td {
 	border-width: 4px 4px 4px 4px;
@@ -26,7 +26,6 @@ table td {
 	border-style: inset inset inset inset;
 	border-color: green green green green;
 	background-color: white;
-	-moz-border-radius: 12px 12px 12px 12px;
 }
 -->
 </style>
@@ -53,6 +52,20 @@ else
 $ndoc=0;
 $rank=1;
 $maxentities=0;
+?>
+<center>
+<table>
+<tr><td><input type="radio" name="filter" id="allwords" checked="checked"/>tout</td></tr>
+<tr><td><input type="radio" name="filter" id="singlewords"/>au moins 2 mots</td></tr>
+<tr><td><input type="radio" name="filter"/><input t/ypa="search" id="search" placeholder="texte à rechercher" autocomplete="off"/></td></tr>
+</table>
+</center>
+
+<?php
+// Uncomment for testing
+//$_POST['documents'][0]=3;
+//$_POST['documents'] [1]=4;
+//
 echo "<center><table><tr><th>rank</th>";
 foreach($_POST['documents'] as $doc){
 	echo "<th>doc. n°$doc";
@@ -80,10 +93,10 @@ foreach($_POST['documents'] as $doc){
 echo "</tr>\n";
 $nrank=1;
 foreach($tab as $rank){
-	echo "<tr><td>".($nrank++)."</td>\n";
+	echo '<tr class="entity"><td>'.($nrank++)."</td>\n";
 	for($i=0; $i<$ndoc ; $i++){
 		if(isset($rank[$i]))
-			echo "<td>".$rank[$i][0]." (".$rank[$i][1].")</td>";
+			echo "<td>".strtr(strstr($rank[$i][0],'"')," ", "_")." (".$rank[$i][1].")</td>";
 		else
 			echo "<td>-</td>";
 	}
@@ -93,5 +106,24 @@ echo "</table></center>\n";
 ?>
 </span>
 </body>
+   <script>
+        // filter based on ime="filter" id="singlewords"/>nput "search"
+        $("#search").bind("keyup", function(){
+            var strToSearch = $("#search").val();
+            $(".entity").hide();
+            $(".entity:contains('"+strToSearch+"')").show();
+        });
+	// filter based on multiword terms 
+	$("#singlewords").bind("click", function(){
+            var strToSearch = "_";
+            $(".entity").hide();
+            $(".entity:contains('"+strToSearch+"')").show();
+        });
+	// filter based on multiword terms 
+        $("#allwords").bind("click", function(){
+            $(".entity").show();
+        });
+	
+    </script>
 </html>
 
