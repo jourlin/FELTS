@@ -265,7 +265,7 @@ else
         echo "<center><B>La base contient actuellement $row[0] catégories.</B></center><BR>";
 if($row[0]>0)
 {
-        $request = 'SELECT id, nom, count("Appartient".entretien), array_agg("Appartient".entretien) FROM "Catégorie", "Appartient" WHERE categorie=id GROUP BY id UNION SELECT id, nom, 0, NULL FROM "Catégorie" WHERE id NOT IN (SELECT DISTINCT categorie FROM "Appartient")';
+        $request = 'SELECT id, nom, count("Appartient".entretien), array_agg("Appartient".entretien) FROM "Catégorie", "Appartient" WHERE categorie=id GROUP BY id UNION SELECT id, nom, 0, NULL FROM "Catégorie" WHERE id NOT IN (SELECT DISTINCT categorie FROM "Appartient") ORDER BY id';
         $result =  pg_query($request);
         if(!$result)
         {
@@ -290,6 +290,7 @@ foreach($categories as $str){
 }
 
 // Show contents 
+echo "<hr>";
 $request = 'SELECT count(*) FROM "Entretien"';
 $result =  pg_query($request);
 $row = pg_fetch_row($result);
@@ -299,7 +300,7 @@ else
 	echo "<center><B>La base contient actuellement $row[0] entretiens.</B></center><BR>";
 if($row[0]>0)
 {
-	$request = 'SELECT "Entretien".id, categorie, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Appartient", "Catégorie", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id="Appartient".entretien AND categorie="Catégorie".id UNION SELECT "Entretien".id, 0 , to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id NOT IN (SELECT entretien FROM "Appartient");';
+	$request = 'SELECT "Entretien".id, categorie, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Appartient", "Catégorie", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id="Appartient".entretien AND categorie="Catégorie".id UNION SELECT "Entretien".id, 0 , to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id NOT IN (SELECT entretien FROM "Appartient") ORDER BY id;';
 	$result =  pg_query($request);
 	if(!$result)
 	{
@@ -333,7 +334,8 @@ if($row[0]>0)
 	echo "</form></center>\n";
 }
 ?>
-
+<hr>
+<br>
 </span>
 </body>
 </html>
