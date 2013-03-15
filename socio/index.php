@@ -1,5 +1,7 @@
-<!DOCTYPE HTML>
-<HTML lang="fr">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+ 
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">  
 <head>
 <style type="text/css">
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -18,7 +20,6 @@ table th {
 	border-style: inset inset inset inset;
 	border-color: green green green green;
 	background-color: white;
-	-moz-border-radius: 12px 12px 12px 12px;
 }
 table td {
 	border-width: 4px 4px 4px 4px;
@@ -26,7 +27,6 @@ table td {
 	border-style: inset inset inset inset;
 	border-color: green green green green;
 	background-color: white;
-	-moz-border-radius: 12px 12px 12px 12px;
 }
 -->
 </style>
@@ -42,7 +42,7 @@ $(function() {
 	 $.datepicker.setDefaults( $.datepicker.regional[ "" ] );
 	$( "#datepicker" ).datepicker( $.datepicker.regional[ "fr" ]);
 	$( "#datepicker" ).datepicker( "option", "autoSize", true );
-});
+});i
 </script>
 </head>
 <body>
@@ -58,6 +58,24 @@ if ($connexion)
 else
   echo "Unsuccessful connection to host $pg_host on port $pg_port<br>\n";
 
+// Delete an interview when asked to
+if(isset($_GET['del'])){
+	if(!pg_query('DELETE FROM "Entretien" WHERE id='.$_GET['del'].";"))
+		echo  '<center><font color="red">Impossible de supprimer l\'entretien n°'.$_GET['del'].'</font></center><br>';
+	else
+		echo  '<center><font color="green">L\'entretien n°'.$_GET['del'].' a été supprimé.</font></center><br>';		
+}
+// Inserts a new category
+if(isset($_POST['catsubmit'])){
+	if(!isset($_POST['newcatname']) || $_POST['newcatname']=="")
+		echo  '<center><font color="red">Vous devez donner un nom à la nouvelle catégorie.</font></center><br>'; 
+	else{
+		if(!pg_query('INSERT INTO "Catégorie" ("nom") VALUES ('."'".$_POST['newcatname']."'".');'))
+                	echo  '<center><font color="red">Impossible d\'ajouter la catégorie "'.$_POST['newcatname'].'"</font></center><br>';
+        	else
+			echo  '<center><font color="green">La catégorie "'.$_POST['newcatname'].'" a été ajoutée.</font></center><br>';
+	}	
+}	
 // Process a new record 
 if(isset($_POST['submit']))
 {
@@ -180,10 +198,16 @@ function RemoveColored($text){
 }
 ?>
 <!-- Enter a new record -->
+<hr><center>
+Ajouter une catégorie:<br>
+<form method="POST" action="./index.php" enctype="multipart/form-data">
+<input type="text" name="newcatname" placeholder="Nom de la catégorie" size=15 />
+<input type="submit" name="catsubmit" value="Ajouter">
+</form><br>
 
 <center>
 Ajouter un entretien :<BR>
-<form method="POST" action="<?php $_SERVER['PHP_SELF'] ?>" enctype="multipart/form-data">
+<form method="POST" action="./index.php" enctype="multipart/form-data">
 <table>
 <tr><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Contenu</th></tr>
 <tr><td><input type="text" name="date" id="datepicker" /></td>
@@ -228,9 +252,44 @@ Ajouter un entretien :<BR>
 </FORM>
 <br>
 </center>
+<hr>
 <?php
-// Show contents 
 
+// Shows categories
+$request = 'SELECT count(*) FROM "Catégorie"';
+$result =  pg_query($request);
+$row = pg_fetch_row($result);
+if($row[0]<=1)
+        echo "<center><B>La base contient actuellement $row[0] catégorie.</B></center><BR>";
+else
+        echo "<center><B>La base contient actuellement $row[0] catégories.</B></center><BR>";
+if($row[0]>0)
+{
+        $request = 'SELECT id, nom, count("Appartient".entretien), array_agg("Appartient".entretien) FROM "Catégorie", "Appartient" WHERE categorie=id GROUP BY id UNION SELECT id, nom, 0, NULL FROM "Catégorie" WHERE id NOT IN (SELECT DISTINCT categorie FROM "Appartient")';
+        $result =  pg_query($request);
+        if(!$result)
+        {
+                echo "Failed to access to table 'Catégorie'";
+                exit;
+        }
+        echo "<center>Liste des catégories :";
+        echo '<form method="POST" action="catcompare.php" enctype="multipart/form-data">';
+        echo "<table>\n";
+        echo "<tr><th>Numéro</th><th>Nom</th><th align='right'>Nb doc.</th><th>Documents</th></tr>";
+        while ($row = pg_fetch_row($result) )
+                {
+                echo '<tr><td><input type="checkbox" name="categories[]" value="'.$row[0].'">'.$row[0]."</td><td>$row[1]</td><td align='right'>$row[2]</td></td><td align='center'>$row[3]</td>";
+                echo "</tr>\n";
+                };
+        echo '</table><INPUT type="submit" name="catcompare" value="Comparer"></form></center><BR>'."\n";
+}
+$categories=pg_copy_to($connexion, "Catégorie");
+foreach($categories as $str){
+	$fields=explode("\t", $str);
+	$cat[$fields[0]]=$fields[1]; 
+}
+
+// Show contents 
 $request = 'SELECT count(*) FROM "Entretien"';
 $result =  pg_query($request);
 $row = pg_fetch_row($result);
@@ -240,7 +299,7 @@ else
 	echo "<center><B>La base contient actuellement $row[0] entretiens.</B></center><BR>";
 if($row[0]>0)
 {
-	$request = 'SELECT "Entretien".id, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id;';
+	$request = 'SELECT "Entretien".id, categorie, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Appartient", "Catégorie", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id="Appartient".entretien AND categorie="Catégorie".id UNION SELECT "Entretien".id, 0 , to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id NOT IN (SELECT entretien FROM "Appartient");';
 	$result =  pg_query($request);
 	if(!$result)
 	{
@@ -248,16 +307,30 @@ if($row[0]>0)
 		exit; 
 	}
 	echo "<center>Liste  :";
-	echo '<form method="POST" action="compare.php" enctype="multipart/form-data">';
+	echo '<form method="POST" action="process.php" enctype="multipart/form-data">';
 	echo "<table>\n";
-	echo "<tr><th>Numéro</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Extrait</th><th>Outils</th></tr>";
+	echo "<tr><th>Numéro</th><th>Catégorie</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Extrait</th><th>Outils</th></tr>";
 	while ($row = pg_fetch_row($result) )
 		{
-		echo '<tr><td><input type="checkbox" name="documents[]" value="'.$row[0].'">'.$row[0]."</td><td>$row[1]</td><td>$row[3] $row[2]</td><td>$row[5] $row[4]</td><td>$row[6]</td>";
+		echo '<tr><td><input type="checkbox" name="documents[]" value="'.$row[0].'">'.$row[0]."</td>\n";
+		echo '<td>';
+		if($row[1]==0)
+			echo "indéfinie";
+		else	
+			echo $cat[$row[1]]."(n° $row[1])";
+		echo '</td>';
+		echo "<td>$row[2]</td><td>$row[4] $row[3]</td><td>$row[6] $row[5]</td><td>$row[7]</td>";
 		echo "<td><a href='./display_doc.php?id=".$row[0]."'>voir</a> ";
+		echo " <a href='".$_SERVER['PHP_SELF']."?del=".$row[0]."'> suppression</a>";
 		echo "</tr>\n";
 		};
-	echo '</table><INPUT type="submit" name="compare" value="Comparer"></form></center><BR>'."\n";
+	echo '</table><INPUT type="submit" name="compare" value="Comparer"> les documents selectionnés ou les '."\n";
+	echo '<INPUT type="submit" name="attach" value="rattacher">';
+	echo ' à la catégorie <SELECT name="attach">\n';
+	foreach($cat as $id => $name)
+		echo '<option value="'.$id.'">'.$name.'</option>'."\n";
+	echo "</SELECT>";
+	echo "</form></center>\n";
 }
 ?>
 

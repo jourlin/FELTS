@@ -8,11 +8,70 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
 SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+--
+-- Name: Appartient; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+--
+
+CREATE TABLE "Appartient" (
+    entretien integer NOT NULL,
+    categorie integer NOT NULL
+);
+
+
+ALTER TABLE public."Appartient" OWNER TO socio;
+
+--
+-- Name: Catégorie; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+--
+
+CREATE TABLE "Catégorie" (
+    id integer NOT NULL,
+    nom character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public."Catégorie" OWNER TO socio;
+
+--
+-- Name: Catégorie_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
+--
+
+CREATE SEQUENCE "Catégorie_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."Catégorie_id_seq" OWNER TO socio;
+
+--
+-- Name: Catégorie_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
+--
+
+ALTER SEQUENCE "Catégorie_id_seq" OWNED BY "Catégorie".id;
+
 
 --
 -- Name: Entities; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
@@ -102,22 +161,37 @@ ALTER SEQUENCE "Individu_id_seq" OWNED BY "Individu".id;
 -- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Entretien" ALTER COLUMN id SET DEFAULT nextval('"Entretien_id_seq"'::regclass);
+ALTER TABLE "Catégorie" ALTER COLUMN id SET DEFAULT nextval('"Catégorie_id_seq"'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Individu" ALTER COLUMN id SET DEFAULT nextval('"Individu_id_seq"'::regclass);
+ALTER TABLE "Entretien" ALTER COLUMN id SET DEFAULT nextval('"Entretien_id_seq"'::regclass);
 
 
 --
--- Name: Entities_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+-- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Entities"
-    ADD CONSTRAINT "Entities_pkey" PRIMARY KEY (id, entity);
+ALTER TABLE "Individu" ALTER COLUMN id SET DEFAULT nextval('"Individu_id_seq"'::regclass);
+
+
+--
+-- Name: Appartient_entretien_categorie_key; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+--
+
+ALTER TABLE ONLY "Appartient"
+    ADD CONSTRAINT "Appartient_entretien_categorie_key" UNIQUE (entretien, categorie);
+
+
+--
+-- Name: Catégorie_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+--
+
+ALTER TABLE ONLY "Catégorie"
+    ADD CONSTRAINT "Catégorie_pkey" PRIMARY KEY (id);
 
 
 --
@@ -137,11 +211,27 @@ ALTER TABLE ONLY "Individu"
 
 
 --
+-- Name: Appartient_categorie_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+--
+
+ALTER TABLE ONLY "Appartient"
+    ADD CONSTRAINT "Appartient_categorie_fkey" FOREIGN KEY (categorie) REFERENCES "Catégorie"(id);
+
+
+--
+-- Name: Appartient_entretien_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+--
+
+ALTER TABLE ONLY "Appartient"
+    ADD CONSTRAINT "Appartient_entretien_fkey" FOREIGN KEY (entretien) REFERENCES "Entretien"(id);
+
+
+--
 -- Name: Entities_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
 --
 
 ALTER TABLE ONLY "Entities"
-    ADD CONSTRAINT "Entities_id_fkey" FOREIGN KEY (id) REFERENCES "Entretien"(id);
+    ADD CONSTRAINT "Entities_id_fkey" FOREIGN KEY (id) REFERENCES "Entretien"(id) ON DELETE CASCADE;
 
 
 --
@@ -161,12 +251,12 @@ ALTER TABLE ONLY "Entretien"
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: postgres
+-- Name: public; Type: ACL; Schema: -; Owner: postgres91
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
+REVOKE ALL ON SCHEMA public FROM postgres91;
+GRANT ALL ON SCHEMA public TO postgres91;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 GRANT ALL ON SCHEMA public TO socio;
 
@@ -174,3 +264,4 @@ GRANT ALL ON SCHEMA public TO socio;
 --
 -- PostgreSQL database dump complete
 --
+
