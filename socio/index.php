@@ -65,6 +65,14 @@ if(isset($_GET['del'])){
 	else
 		echo  '<center><font color="green">L\'entretien n°'.$_GET['del'].' a été supprimé.</font></center><br>';		
 }
+// Delete an category when asked to
+if(isset($_GET['delcat'])){
+        if(!pg_query('DELETE FROM "Appartient" WHERE categorie='.$_GET['delcat'].'; DELETE FROM "Catégorie" WHERE id='.$_GET['delcat'].";"))
+                echo  '<center><font color="red">Impossible de supprimer la catégorie n°'.$_GET['delcat'].'</font></center><br>';
+        else
+                echo  '<center><font color="green">La catégorie n°'.$_GET['delcat'].' a été supprimé.</font></center><br>';
+}
+
 // Inserts a new category
 if(isset($_POST['catsubmit'])){
 	if(!isset($_POST['newcatname']) || $_POST['newcatname']=="")
@@ -273,12 +281,12 @@ if($row[0]>0)
                 exit;
         }
         echo "<center>Liste des catégories :";
-        echo '<form method="POST" action="catcompare.php" enctype="multipart/form-data">';
+        echo '<form method="POST" action="process.php" enctype="multipart/form-data">';
         echo "<table>\n";
-        echo "<tr><th>Numéro</th><th>Nom</th><th align='right'>Nb doc.</th><th>Documents</th></tr>";
+        echo "<tr><th>Numéro</th><th>Nom</th><th align='right'>Nb doc.</th><th>Documents</th><th>Outils</th></tr>";
         while ($row = pg_fetch_row($result) )
                 {
-                echo '<tr><td><input type="checkbox" name="categories[]" value="'.$row[0].'">'.$row[0]."</td><td>$row[1]</td><td align='right'>$row[2]</td></td><td align='center'>$row[3]</td>";
+                echo '<tr><td><input type="checkbox" name="categories[]" value="'.$row[0].'">'.$row[0]."</td><td>$row[1]</td><td align='right'>$row[2]</td></td><td align='center'>$row[3]</td><td><a href=./index.php?delcat=$row[0]>supprimer</a>";
                 echo "</tr>\n";
                 };
         echo '</table><INPUT type="submit" name="catcompare" value="Comparer"></form></center><BR>'."\n";
@@ -322,7 +330,7 @@ if($row[0]>0)
 		echo '</td>';
 		echo "<td>$row[2]</td><td>$row[4] $row[3]</td><td>$row[6] $row[5]</td><td>$row[7]</td>";
 		echo "<td><a href='./display_doc.php?id=".$row[0]."'>voir</a> ";
-		echo " <a href='".$_SERVER['PHP_SELF']."?del=".$row[0]."'> suppression</a>";
+		echo " <a href='".$_SERVER['PHP_SELF']."?del=".$row[0]."'> supprimer</a>";
 		echo "</tr>\n";
 		};
 	echo '</table><INPUT type="submit" name="compare" value="Comparer"> les documents selectionnés ou les '."\n";

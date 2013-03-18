@@ -35,10 +35,6 @@ table td {
 <body>
 <center>
 <a href="./index.php">Retour à la gestion des documents</a>
-<h1>Traitement des document(s) n° <?php echo implode(', ',$_POST['documents']); ?>
-</h1>
-</center>
-<span>
 <?php
 require("param.inc.php");
 
@@ -48,7 +44,76 @@ if ($connexion)
 else
   echo "Unsuccessful connection to host $pg_host";
 
-if(isset($_POST['attach'])){			// Insert documents in category
+if(isset($_POST['catcompare'])){
+?>
+<h1>Comparaison de(s) catégorie(s) n° <?php echo implode(', ',$_POST['categories']); ?>
+</h1>
+</center>
+<span>
+<?php
+        $ndoc=0;
+        $rank=1;
+        $maxentities=0;
+
+
+        echo '<center>';
+        echo '<table>';
+        echo '<tr><td><input type="radio" name="filter" id="allwords" checked="checked"/>tout</td></tr>';
+        echo '<tr><td><input type="radio" name="filter" id="singlewords"/>au moins 2 mots</td></tr>';
+        echo '<tr><td><input type="radio" name="filter"/><input t/ypa="search" id="search" placeholder="texte à rechercher" autocomplete="off"/></td></tr>';
+        echo '</table>';
+        echo '</center>';
+
+        // Uncomment for testing
+        //$_POST['documents'][0]=3;
+        //$_POST['documents'] [1]=4;
+        //
+        echo "<center><table><tr><th>rank</th>";
+        foreach($_POST['categories'] as $cat){
+                echo "<th>cat. n°$cat (";
+                $request='SELECT nom FROM "Catégorie" WHERE id='.$cat.';';
+                $result =  pg_query($request);
+                $row = pg_fetch_row($result);
+                echo $row[0].")";
+                echo "</th>";
+                $rank=0;
+                $request='SELECT entity, number FROM "Entities", "Appartient" WHERE "Entities".id="Appartient".entretien AND "Appartient".categorie='."$cat ORDER BY number DESC;";
+                $result =  pg_query($request);
+                if (!$result){
+                        echo '<center><font color="red">'.pg_last_error($connexion).' !</font></center><br>';
+                }
+                while ($row = pg_fetch_row($result) ){
+                        $tab[$rank][$ndoc]=$row;
+                        $rank++;
+                        if($rank>$maxentities)
+                                $maxentities=$rank;
+                }
+                $ndoc++;
+        }
+        echo "</tr>\n";
+        $nrank=1;
+        foreach($tab as $rank){
+                echo '<tr class="entity"><td>'.($nrank++)."</td>\n";
+                for($i=0; $i<$ndoc ; $i++){
+                        if(isset($rank[$i]))
+                                echo "<td>".strtr(strstr($rank[$i][0],'"')," ", "_")." (".$rank[$i][1].")</td>";
+                        else
+                                echo "<td>-</td>";
+                }
+                echo "</tr>\n";
+        }
+        echo "</table></center>\n";
+}
+
+
+if(!isset($_POST['compare']) && isset($_POST['attach'])){			// Insert documents in category
+?>
+<h1>Rattachement de(s) document(s) n° <?php echo implode(', ',$_POST['documents']); ?> à la catégorie <?php echo $_POST['attach']; ?>
+</h1>
+</center>
+<span>
+<?php
+
 	foreach($_POST['documents'] as $docid){
 		pg_query('DELETE FROM "Appartient" WHERE entretien='.$docid.';'); // Delete all previous attachments
 		if(!pg_query('INSERT INTO "Appartient" (entretien, categorie) VALUES ('."'$docid', '".$_POST['attach']."');"))
@@ -56,7 +121,8 @@ if(isset($_POST['attach'])){			// Insert documents in category
 		else
 			echo '<center><font color="green">Le document '.$docid.' appartient maintenant à la catégorie '.$_POST['attach'].'.</font></center><br>';
 	}
-	echo '<center><a href="./index.php">Retour à la gestion des documents</a></center>';
+echo '<center><a href="./index.php">Retour à la gestion des documents</a></center>';
+
 }
 
 if(isset($_POST['compare'])){		// Compare all documents
@@ -65,6 +131,12 @@ if(isset($_POST['compare'])){		// Compare all documents
 	$rank=1;
 	$maxentities=0;
 	
+?>
+<h1>Comparaison de(s) document(s) n° <?php echo implode(', ',$_POST['documents']); ?>
+</h1>
+</center>
+<span>
+<?php
 
 	echo '<center>';
 	echo '<table>';
