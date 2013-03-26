@@ -49,7 +49,7 @@ if ($connexion)
 else
   echo "Unsuccessful connection to host $pg_host";
 
-$request = 'SELECT to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", content FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id='.$_GET['id'].';';
+$request = 'SELECT to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName", replace(content, '."'\n', '<br>'".') FROM "Document", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id='.$_GET['id'].';';
 $result =  pg_query($request);
 $row = pg_fetch_row($result);
 echo "<center><table><tr><td>Date :</td><td>".$row[0]."</td></tr><tr><td>Enquêté :</td><td>".$row[2]." ".$row[1]."</td></tr><tr><td>Enquêteur :</td><td>".$row[4]." ".$row[3]."</td></tr></table></center>\n";

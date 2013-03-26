@@ -74,13 +74,13 @@ if(isset($_POST['catcompare'])){
         echo "<center><table><tr><th>rank</th>";
         foreach($_POST['categories'] as $cat){
                 echo "<th>cat. n°$cat (";
-                $request='SELECT nom FROM "Catégorie" WHERE id='.$cat.';';
+                $request='SELECT name FROM "Category" WHERE id='.$cat.';';
                 $result =  pg_query($request);
                 $row = pg_fetch_row($result);
                 echo $row[0].")";
                 echo "</th>";
                 $rank=0;
-                $request='SELECT entity, number FROM "Entities", "Appartient" WHERE "Entities".id="Appartient".entretien AND "Appartient".categorie='."$cat ORDER BY number DESC;";
+                $request='SELECT entity, count("offset") as number FROM "Entities", "Belongs" WHERE "Entities".id="Belongs".document AND "Belongs".category='."$cat GROUP BY entity ORDER BY count(".'"offset") DESC;';
                 $result =  pg_query($request);
                 if (!$result){
                         echo '<center><font color="red">'.pg_last_error($connexion).' !</font></center><br>';
@@ -122,8 +122,8 @@ if(!isset($_POST['compare']) && isset($_POST['attach'])){			// Insert documents 
 <?php
 
 	foreach($_POST['documents'] as $docid){
-		pg_query('DELETE FROM "Appartient" WHERE entretien='.$docid.';'); // Delete all previous attachments
-		if(!pg_query('INSERT INTO "Appartient" (entretien, categorie) VALUES ('."'$docid', '".$_POST['attach']."');"))
+		pg_query('DELETE FROM "Belongs" WHERE document='.$docid.';'); // Delete all previous attachments
+		if(!pg_query('INSERT INTO "Belongs" (document, category) VALUES ('."'$docid', '".$_POST['attach']."');"))
 			echo '<center><font color="red">'.pg_last_error($connexion).' !</font></center><br>';
 		else
 			echo '<center><font color="green">Le document '.$docid.' appartient maintenant à la catégorie '.$_POST['attach'].'.</font></center><br>';
@@ -161,7 +161,7 @@ if(isset($_POST['compare'])){		// Compare all documents
 	echo "<center><table><tr><th>rank</th>";
 	foreach($_POST['documents'] as $doc){
 		echo "<th>doc. n°$doc";
-		$request='SELECT to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName" FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id='.$doc.';';
+		$request='SELECT to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName" FROM "Document", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id='.$doc.';';
 		$result =  pg_query($request);
 		$row = pg_fetch_row($result);
 		echo "<br>".$row[0];
@@ -169,7 +169,7 @@ if(isset($_POST['compare'])){		// Compare all documents
 		echo "<br>".$row[4]." ".$row[3];
 		echo "</th>";
 		$rank=0;
-		$request='SELECT entity, number FROM "Entities" WHERE id='.$doc." ORDER BY number DESC;";
+		$request='SELECT entity, count("offset") as number FROM "Entities" WHERE id='.$doc.' GROUP BY entity ORDER BY count("offset") DESC;';
 		$result =  pg_query($request);
 		if (!$result){ 
 			echo '<center><font color="red">'.pg_last_error($connexion).' !</font></center><br>';	

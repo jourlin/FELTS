@@ -29,34 +29,34 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: Appartient; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+-- Name: Belongs; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
 --
 
-CREATE TABLE "Appartient" (
-    entretien integer NOT NULL,
-    categorie integer NOT NULL
+CREATE TABLE "Belongs" (
+    document integer NOT NULL,
+    category integer NOT NULL
 );
 
 
-ALTER TABLE public."Appartient" OWNER TO socio;
+ALTER TABLE public."Belongs" OWNER TO socio;
 
 --
--- Name: Catégorie; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+-- Name: Category; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
 --
 
-CREATE TABLE "Catégorie" (
+CREATE TABLE "Category" (
     id integer NOT NULL,
-    nom character varying(255) NOT NULL
+    name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public."Catégorie" OWNER TO socio;
+ALTER TABLE public."Category" OWNER TO socio;
 
 --
--- Name: Catégorie_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
+-- Name: Category_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
 --
 
-CREATE SEQUENCE "Catégorie_id_seq"
+CREATE SEQUENCE "Category_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -64,33 +64,20 @@ CREATE SEQUENCE "Catégorie_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."Catégorie_id_seq" OWNER TO socio;
+ALTER TABLE public."Category_id_seq" OWNER TO socio;
 
 --
--- Name: Catégorie_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
+-- Name: Category_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
 --
 
-ALTER SEQUENCE "Catégorie_id_seq" OWNED BY "Catégorie".id;
+ALTER SEQUENCE "Category_id_seq" OWNED BY "Category".id;
 
 
 --
--- Name: Entities; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+-- Name: Document; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
 --
 
-CREATE TABLE "Entities" (
-    id integer NOT NULL,
-    number integer,
-    entity text NOT NULL
-);
-
-
-ALTER TABLE public."Entities" OWNER TO socio;
-
---
--- Name: Entretien; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
---
-
-CREATE TABLE "Entretien" (
+CREATE TABLE "Document" (
     id integer NOT NULL,
     interviewed integer,
     interviewer integer,
@@ -99,13 +86,13 @@ CREATE TABLE "Entretien" (
 );
 
 
-ALTER TABLE public."Entretien" OWNER TO socio;
+ALTER TABLE public."Document" OWNER TO socio;
 
 --
--- Name: Entretien_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
+-- Name: Document_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
 --
 
-CREATE SEQUENCE "Entretien_id_seq"
+CREATE SEQUENCE "Document_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -113,20 +100,55 @@ CREATE SEQUENCE "Entretien_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."Entretien_id_seq" OWNER TO socio;
+ALTER TABLE public."Document_id_seq" OWNER TO socio;
 
 --
--- Name: Entretien_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
+-- Name: Document_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
 --
 
-ALTER SEQUENCE "Entretien_id_seq" OWNED BY "Entretien".id;
+ALTER SEQUENCE "Document_id_seq" OWNED BY "Document".id;
 
 
 --
--- Name: Individu; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+-- Name: Entities; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
 --
 
-CREATE TABLE "Individu" (
+CREATE TABLE "Entities" (
+    id integer NOT NULL,
+    line integer,
+    "offset" integer,
+    entity text NOT NULL
+);
+
+
+ALTER TABLE public."Entities" OWNER TO socio;
+
+--
+-- Name: Entities_line_seq; Type: SEQUENCE; Schema: public; Owner: socio
+--
+
+CREATE SEQUENCE "Entities_line_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."Entities_line_seq" OWNER TO socio;
+
+--
+-- Name: Entities_line_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
+--
+
+ALTER SEQUENCE "Entities_line_seq" OWNED BY "Entities".line;
+
+
+--
+-- Name: Person; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+--
+
+CREATE TABLE "Person" (
     id integer NOT NULL,
     "FirstName" character varying(255) NOT NULL,
     "MiddleName" character varying(255),
@@ -134,13 +156,13 @@ CREATE TABLE "Individu" (
 );
 
 
-ALTER TABLE public."Individu" OWNER TO socio;
+ALTER TABLE public."Person" OWNER TO socio;
 
 --
--- Name: Individu_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
+-- Name: Person_id_seq; Type: SEQUENCE; Schema: public; Owner: socio
 --
 
-CREATE SEQUENCE "Individu_id_seq"
+CREATE SEQUENCE "Person_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -148,106 +170,90 @@ CREATE SEQUENCE "Individu_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."Individu_id_seq" OWNER TO socio;
+ALTER TABLE public."Person_id_seq" OWNER TO socio;
 
 --
--- Name: Individu_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
+-- Name: Person_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: socio
 --
 
-ALTER SEQUENCE "Individu_id_seq" OWNED BY "Individu".id;
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: socio
---
-
-ALTER TABLE "Catégorie" ALTER COLUMN id SET DEFAULT nextval('"Catégorie_id_seq"'::regclass);
+ALTER SEQUENCE "Person_id_seq" OWNED BY "Person".id;
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE "Entretien" ALTER COLUMN id SET DEFAULT nextval('"Entretien_id_seq"'::regclass);
+ALTER TABLE "Category" ALTER COLUMN id SET DEFAULT nextval('"Category_id_seq"'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE "Individu" ALTER COLUMN id SET DEFAULT nextval('"Individu_id_seq"'::regclass);
+ALTER TABLE "Document" ALTER COLUMN id SET DEFAULT nextval('"Document_id_seq"'::regclass);
 
 
 --
--- Name: Appartient_entretien_categorie_key; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+-- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Appartient"
-    ADD CONSTRAINT "Appartient_entretien_categorie_key" UNIQUE (entretien, categorie);
+ALTER TABLE "Person" ALTER COLUMN id SET DEFAULT nextval('"Person_id_seq"'::regclass);
 
 
 --
 -- Name: Catégorie_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
 --
 
-ALTER TABLE ONLY "Catégorie"
+ALTER TABLE ONLY "Category"
     ADD CONSTRAINT "Catégorie_pkey" PRIMARY KEY (id);
 
 
 --
--- Name: Entrentien_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+-- Name: Document_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
 --
 
-ALTER TABLE ONLY "Entretien"
-    ADD CONSTRAINT "Entrentien_pkey" PRIMARY KEY (id);
+ALTER TABLE ONLY "Document"
+    ADD CONSTRAINT "Document_pkey" PRIMARY KEY (id);
 
 
 --
 -- Name: Individu_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
 --
 
-ALTER TABLE ONLY "Individu"
+ALTER TABLE ONLY "Person"
     ADD CONSTRAINT "Individu_pkey" PRIMARY KEY (id);
 
 
 --
--- Name: Appartient_categorie_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+-- Name: Belongs_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Appartient"
-    ADD CONSTRAINT "Appartient_categorie_fkey" FOREIGN KEY (categorie) REFERENCES "Catégorie"(id);
-
-
---
--- Name: Appartient_entretien_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
---
-
-ALTER TABLE ONLY "Appartient"
-    ADD CONSTRAINT "Appartient_entretien_fkey" FOREIGN KEY (entretien) REFERENCES "Entretien"(id);
+ALTER TABLE ONLY "Belongs"
+    ADD CONSTRAINT "Belongs_category_fkey" FOREIGN KEY (category) REFERENCES "Category"(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: Entities_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+-- Name: Belongs_document_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Entities"
-    ADD CONSTRAINT "Entities_id_fkey" FOREIGN KEY (id) REFERENCES "Entretien"(id) ON DELETE CASCADE;
-
-
---
--- Name: Entrentien_interviewed_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
---
-
-ALTER TABLE ONLY "Entretien"
-    ADD CONSTRAINT "Entrentien_interviewed_fkey" FOREIGN KEY (interviewed) REFERENCES "Individu"(id);
+ALTER TABLE ONLY "Belongs"
+    ADD CONSTRAINT "Belongs_document_fkey" FOREIGN KEY (document) REFERENCES "Document"(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: Entretien_interviewer_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+-- Name: Document_interviewed_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
 --
 
-ALTER TABLE ONLY "Entretien"
-    ADD CONSTRAINT "Entretien_interviewer_fkey" FOREIGN KEY (interviewer) REFERENCES "Individu"(id);
+ALTER TABLE ONLY "Document"
+    ADD CONSTRAINT "Document_interviewed_fkey" FOREIGN KEY (interviewed) REFERENCES "Person"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: Document_interviewer_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
+--
+
+ALTER TABLE ONLY "Document"
+    ADD CONSTRAINT "Document_interviewer_fkey" FOREIGN KEY (interviewer) REFERENCES "Person"(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -258,7 +264,6 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres91;
 GRANT ALL ON SCHEMA public TO postgres91;
 GRANT ALL ON SCHEMA public TO PUBLIC;
-GRANT ALL ON SCHEMA public TO socio;
 
 
 --

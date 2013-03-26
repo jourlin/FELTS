@@ -60,14 +60,14 @@ else
 
 // Delete an interview when asked to
 if(isset($_GET['del'])){
-	if(!pg_query('DELETE FROM "Entretien" WHERE id='.$_GET['del'].";"))
-		echo  '<center><font color="red">Impossible de supprimer l\'entretien n°'.$_GET['del'].'</font></center><br>';
+	if(!pg_query('DELETE FROM "Document" WHERE id='.$_GET['del'].";"))
+		echo  '<center><font color="red">Impossible de supprimer l\'entretien n°'.$_GET['del'].'</font></center><br>'.pg_last_error();
 	else
 		echo  '<center><font color="green">L\'entretien n°'.$_GET['del'].' a été supprimé.</font></center><br>';		
 }
 // Delete an category when asked to
 if(isset($_GET['delcat'])){
-        if(!pg_query('DELETE FROM "Appartient" WHERE categorie='.$_GET['delcat'].'; DELETE FROM "Catégorie" WHERE id='.$_GET['delcat'].";"))
+        if(!pg_query('DELETE FROM "Belongs" WHERE category='.$_GET['delcat'].'; DELETE FROM "Category" WHERE id='.$_GET['delcat'].";"))
                 echo  '<center><font color="red">Impossible de supprimer la catégorie n°'.$_GET['delcat'].'</font></center><br>';
         else
                 echo  '<center><font color="green">La catégorie n°'.$_GET['delcat'].' a été supprimé.</font></center><br>';
@@ -78,7 +78,7 @@ if(isset($_POST['catsubmit'])){
 	if(!isset($_POST['newcatname']) || $_POST['newcatname']=="")
 		echo  '<center><font color="red">Vous devez donner un nom à la nouvelle catégorie.</font></center><br>'; 
 	else{
-		if(!pg_query('INSERT INTO "Catégorie" ("nom") VALUES ('."'".$_POST['newcatname']."'".');'))
+		if(!pg_query('INSERT INTO "Category" ("name") VALUES ('."'".$_POST['newcatname']."'".');'))
                 	echo  '<center><font color="red">Impossible d\'ajouter la catégorie "'.$_POST['newcatname'].'"</font></center><br>';
         	else
 			echo  '<center><font color="green">La catégorie "'.$_POST['newcatname'].'" a été ajoutée.</font></center><br>';
@@ -164,37 +164,37 @@ function RemoveColored($text){
 // Inserts new person
 
 				if($_POST['interviewed']=="newinterviewed"){
-					$request = 'INSERT INTO "Individu" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamed']."', '".$_POST['lastnamed']."');";
+					$request = 'INSERT INTO "Person" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamed']."', '".$_POST['lastnamed']."');";
 					$result =  pg_query($request);
 					if (!$result) 
 						echo '<center><font color="red">Erreur lors de l\'insertion d\'un enquêté dans la base de données !</font></center><br>';
-					$last_id_query = pg_query('SELECT last_value FROM "Individu_id_seq";');
+					$last_id_query = pg_query('SELECT last_value FROM "Person_id_seq";');
 					$row=pg_fetch_row($last_id_query);			
 					$_POST['interviewed'] = $row[0];		// Id of new person	
 				}
 				if($_POST['interviewer']=="newinterviewer"){
-					$request = 'INSERT INTO "Individu" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamer']."', '".$_POST['lastnamer']."');";
+					$request = 'INSERT INTO "Person" ("FirstName", "LastName") VALUES ('."'".$_POST['firstnamer']."', '".$_POST['lastnamer']."');";
 
 					$result =  pg_query($request);
 					if (!$result) 
 						echo '<center><font color="red">Erreur lors de l\'insertion d\'un enquêteur dans la base de données !</font></center><br>';
-					$last_id_query = pg_query('SELECT last_value FROM "Individu_id_seq";');
+					$last_id_query = pg_query('SELECT last_value FROM "Person_id_seq";');
 					$row=pg_fetch_row($last_id_query);			
 					$_POST['interviewer'] = $row[0];		// Id of new person	
 
 				}
 
 // Insert a new interview
-				$request = 'INSERT INTO "Entretien" (date, interviewed, interviewer, content) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."', '".$content."');";
+				$request = 'INSERT INTO "Document" (date, interviewed, interviewer, content) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."', '".$content."');";
 				$result=pg_query($request);
 				if (!$result) 
 					echo '<center><font color="red">Erreur lors de l\'insertion de l\'entretien dans la base de données !</font></center><br>';	
-				$last_id_query = pg_query('SELECT last_value FROM "Entretien_id_seq";');
+				$last_id_query = pg_query('SELECT last_value FROM "Document_id_seq";');
 				$row=pg_fetch_row($last_id_query);
 				$CurrentInterview=$row[0];
-				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | grep -v ".'\"\"'." | cut -f3 | sort | uniq -c| sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
+				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | grep -v ".'\"\"'." | sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
 				if(!pg_copy_from($connexion, "Entities", $response, "," )){
-					echo '<center><font color="red">Erreur durant l\'importation des statistiques !<br>'.pg_last_error().'</font></center><br>'; 
+					echo '<center><font color="red">Erreur durant l\'importation des statistiques !<br>'.pg_last_error().'</font></center><br>Felts Reponse was :<br>'.$response.'<br>'; 
 					print_r(error_get_last());
 				}
 			}
@@ -223,7 +223,7 @@ Ajouter un entretien :<BR>
 <SELECT name="interviewed">
 <option value="newinterviewed" selected="selected">Nouveau -></option>
 <?php
-	$interviewedq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewed="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
+	$interviewedq = 'SELECT DISTINCT "Person".id, "LastName", "FirstName", "MiddleName" FROM "Document", "Person" WHERE "Document".interviewed="Person".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewedr =  pg_query($interviewedq);
 	while ($row = pg_fetch_row($interviewedr) )
 	{		
@@ -238,7 +238,7 @@ Ajouter un entretien :<BR>
 <SELECT name="interviewer">
 <option value="newinterviewer" selected="selected">Nouveau -></option>
 <?php
-	$interviewerq = 'SELECT DISTINCT "Individu".id, "LastName", "FirstName", "MiddleName" FROM "Entretien", "Individu" WHERE "Entretien".interviewer="Individu".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
+	$interviewerq = 'SELECT DISTINCT "Person".id, "LastName", "FirstName", "MiddleName" FROM "Document", "Person" WHERE "Document".interviewer="Person".id ORDER by "LastName", "FirstName", "MiddleName" ASC';
 	$interviewerr =  pg_query($interviewerq);
 	while ($row = pg_fetch_row($interviewerr) )
 	{		
@@ -264,7 +264,7 @@ Ajouter un entretien :<BR>
 <?php
 
 // Shows categories
-$request = 'SELECT count(*) FROM "Catégorie"';
+$request = 'SELECT count(*) FROM "Category"';
 $result =  pg_query($request);
 $row = pg_fetch_row($result);
 if($row[0]<=1)
@@ -273,11 +273,11 @@ else
         echo "<center><B>La base contient actuellement $row[0] catégories.</B></center><BR>";
 if($row[0]>0)
 {
-        $request = 'SELECT id, nom, count("Appartient".entretien), array_agg("Appartient".entretien) FROM "Catégorie", "Appartient" WHERE categorie=id GROUP BY id UNION SELECT id, nom, 0, NULL FROM "Catégorie" WHERE id NOT IN (SELECT DISTINCT categorie FROM "Appartient") ORDER BY id';
+        $request = 'SELECT id, name, count("Belongs".document), array_agg("Belongs".document) FROM "Category", "Belongs" WHERE category=id GROUP BY id UNION SELECT id, name, 0, NULL FROM "Category" WHERE id NOT IN (SELECT DISTINCT category FROM "Belongs") ORDER BY id';
         $result =  pg_query($request);
         if(!$result)
         {
-                echo "Failed to access to table 'Catégorie'";
+                echo "Failed to access to table 'Category'";
                 exit;
         }
         echo "<center>Liste des catégories :";
@@ -291,7 +291,7 @@ if($row[0]>0)
                 };
         echo '</table><INPUT type="submit" name="catcompare" value="Comparer"></form></center><BR>'."\n";
 }
-$categories=pg_copy_to($connexion, "Catégorie");
+$categories=pg_copy_to($connexion, "Category");
 foreach($categories as $str){
 	$fields=explode("\t", $str);
 	$cat[$fields[0]]=$fields[1]; 
@@ -299,7 +299,7 @@ foreach($categories as $str){
 
 // Show contents 
 echo "<hr>";
-$request = 'SELECT count(*) FROM "Entretien"';
+$request = 'SELECT count(*) FROM "Document"';
 $result =  pg_query($request);
 $row = pg_fetch_row($result);
 if($row[0]<=1)
@@ -308,11 +308,11 @@ else
 	echo "<center><B>La base contient actuellement $row[0] entretiens.</B></center><BR>";
 if($row[0]>0)
 {
-	$request = 'SELECT "Entretien".id, categorie, to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Appartient", "Catégorie", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id="Appartient".entretien AND categorie="Catégorie".id UNION SELECT "Entretien".id, 0 , to_char(date, '."'DD Month YYYY'".'), i1."LastName", i1."FirstName", i2."LastName", i2."FirstName", substr(content, 0, 20) FROM "Entretien", "Individu" as i1, "Individu" as i2 WHERE interviewer=i2.id AND interviewed=i1.id AND "Entretien".id NOT IN (SELECT entretien FROM "Appartient") ORDER BY id;';
+	$request = 'SELECT "Document".id, category, to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName", substr(content, 0, 20) FROM "Document", "Belongs", "Category", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id="Belongs".document AND category="Category".id UNION SELECT "Document".id, 0 , to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName", substr(content, 0, 20) FROM "Document", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id NOT IN (SELECT document FROM "Belongs") ORDER BY id;';
 	$result =  pg_query($request);
 	if(!$result)
 	{
-		echo "Failed to access to table 'Entretien'";
+		echo "Failed to access table 'Document' :".pg_last_error();
 		exit; 
 	}
 	echo "<center>Liste  :";
