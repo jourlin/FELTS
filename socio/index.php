@@ -60,6 +60,10 @@ else
 
 // Delete an interview when asked to
 if(isset($_GET['del'])){
+	if(!pg_query('DELETE FROM "Content" WHERE doc='.$_GET['del'].";"))
+                echo  '<center><font color="red">Impossible de supprimer le contenu de l\'entretien n°'.$_GET['del'].'</font></center><br>'.pg_last_error();
+        else
+                echo  '<center><font color="green">Le contenu de l\'entretien n°'.$_GET['del'].' a été supprimé.</font></center><br>';
 	if(!pg_query('DELETE FROM "Document" WHERE id='.$_GET['del'].";"))
 		echo  '<center><font color="red">Impossible de supprimer l\'entretien n°'.$_GET['del'].'</font></center><br>'.pg_last_error();
 	else
@@ -70,7 +74,7 @@ if(isset($_GET['delcat'])){
         if(!pg_query('DELETE FROM "Belongs" WHERE category='.$_GET['delcat'].'; DELETE FROM "Category" WHERE id='.$_GET['delcat'].";"))
                 echo  '<center><font color="red">Impossible de supprimer la catégorie n°'.$_GET['delcat'].'</font></center><br>';
         else
-                echo  '<center><font color="green">La catégorie n°'.$_GET['delcat'].' a été supprimé.</font></center><br>';
+                echo  '<center><font color="green">La catégorie n°'.$_GET['delcat'].' a été supprimée.</font></center><br>';
 }
 
 // Inserts a new category
@@ -185,13 +189,20 @@ function RemoveColored($text){
 				}
 
 // Insert a new interview
-				$request = 'INSERT INTO "Document" (date, interviewed, interviewer, content) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."', '".$content."');";
+				$request = 'INSERT INTO "Document" (date, interviewed, interviewer) VALUES ('."'".$date."', '".$_POST['interviewed']."', '".$_POST['interviewer']."');";
 				$result=pg_query($request);
 				if (!$result) 
-					echo '<center><font color="red">Erreur lors de l\'insertion de l\'entretien dans la base de données !</font></center><br>';	
+					echo '<center><font color="red">Erreur lors de l\'insertion de l\'entretien dans la base de données !</font></center><br>';
 				$last_id_query = pg_query('SELECT last_value FROM "Document_id_seq";');
-				$row=pg_fetch_row($last_id_query);
-				$CurrentInterview=$row[0];
+                                $row=pg_fetch_row($last_id_query);
+                                $CurrentInterview=$row[0];
+				$lines=explode("\n", $content);
+				foreach($lines as $number => $line){
+					$request = 'INSERT INTO "Content" (doc, line, content) VALUES ('."'".$CurrentInterview."', '".($number+1)."', '".$line."');";
+					$result=pg_query($request);
+                                	if (!$result)
+                                        	echo '<center><font color="red">Erreur lors de l\'insertion de la ligne '.$number.' : '.pg_last_error().'!</font></center><br>';
+				}
 				$response=explode("\n", shell_exec("$felts_bin/felts_client $felts_host $felts_port < $filename | grep -v ".'\"\"'." | sed 's:^:$CurrentInterview, :'| sed 's: ".'"'.":, ".'"'.":'"));
 				if(!pg_copy_from($connexion, "Entities", $response, "," )){
 					echo '<center><font color="red">Erreur durant l\'importation des statistiques !<br>'.pg_last_error().'</font></center><br>Felts Reponse was :<br>'.$response.'<br>'; 
@@ -296,7 +307,6 @@ foreach($categories as $str){
 	$fields=explode("\t", $str);
 	$cat[$fields[0]]=$fields[1]; 
 }
-
 // Show contents 
 echo "<hr>";
 $request = 'SELECT count(*) FROM "Document"';
@@ -308,7 +318,7 @@ else
 	echo "<center><B>La base contient actuellement $row[0] entretiens.</B></center><BR>";
 if($row[0]>0)
 {
-	$request = 'SELECT "Document".id, category, to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName", substr(content, 0, 20) FROM "Document", "Belongs", "Category", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id="Belongs".document AND category="Category".id UNION SELECT "Document".id, 0 , to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName", substr(content, 0, 20) FROM "Document", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id NOT IN (SELECT document FROM "Belongs") ORDER BY id;';
+	$request = 'SELECT "Document".id, category, to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName" FROM "Document", "Belongs", "Category", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id="Belongs".document AND category="Category".id UNION SELECT "Document".id, 0 , to_char(date, '."'DD Month YYYY'".'), p1."LastName", p1."FirstName", p2."LastName", p2."FirstName" FROM "Document", "Person" as p1, "Person" as p2 WHERE interviewer=p2.id AND interviewed=p1.id AND "Document".id NOT IN (SELECT document FROM "Belongs") ORDER BY id;';
 	$result =  pg_query($request);
 	if(!$result)
 	{
@@ -318,7 +328,7 @@ if($row[0]>0)
 	echo "<center>Liste  :";
 	echo '<form method="POST" action="process.php" enctype="multipart/form-data">';
 	echo "<table>\n";
-	echo "<tr><th>Numéro</th><th>Catégorie</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Extrait</th><th>Outils</th></tr>";
+	echo "<tr><th>Numéro</th><th>Catégorie</th><th>Date</th><th>Enquêté</th><th>Enquêteur</th><th>Outils</th></tr>";
 	while ($row = pg_fetch_row($result) )
 		{
 		echo '<tr><td><input type="checkbox" name="documents[]" value="'.$row[0].'">'.$row[0]."</td>\n";
@@ -328,7 +338,7 @@ if($row[0]>0)
 		else	
 			echo $cat[$row[1]]."(n° $row[1])";
 		echo '</td>';
-		echo "<td>$row[2]</td><td>$row[4] $row[3]</td><td>$row[6] $row[5]</td><td>$row[7]</td>";
+		echo "<td>$row[2]</td><td>$row[4] $row[3]</td><td>$row[6] $row[5]</td>";
 		echo "<td><a href='./display_doc.php?id=".$row[0]."'>voir</a> ";
 		echo " <a href='".$_SERVER['PHP_SELF']."?del=".$row[0]."'> supprimer</a>";
 		echo "</tr>\n";

@@ -100,9 +100,11 @@ if(isset($_POST['catcompare'])){
                 for($i=0; $i<$ndoc ; $i++){
                         if(isset($rank[$i])){
 				$term=substr($rank[$i][0], 2, strlen($rank[$i][0])-3);
-				if(!isset($stopwords[$term]))
-					$term="<b>".$term."*</b>";
-                                echo '<td align="center">'.strtr($term," ", "_")." (".$rank[$i][1].")</td>";
+				if(!isset($stopwords[$term])){
+					$sterm=strtr($term," ", "_");	
+					$term="<b>".$sterm."<a href=".'"'."./display_doc.php?cat=".$_POST['categories'][$i]."&entity=$term".'"'.">*</a></b>";
+				}
+                                echo '<td align="center">'.$term." (".$rank[$i][1].")</td>";
                         	}
 			else
                                 echo "<td>-</td>";

@@ -74,6 +74,19 @@ ALTER SEQUENCE "Category_id_seq" OWNED BY "Category".id;
 
 
 --
+-- Name: Content; Type: TABLE; Schema: public; Owner: hypolite; Tablespace: 
+--
+
+CREATE TABLE "Content" (
+    doc integer NOT NULL,
+    line integer NOT NULL,
+    content text
+);
+
+
+ALTER TABLE public."Content" OWNER TO hypolite;
+
+--
 -- Name: Document; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
 --
 
@@ -81,8 +94,7 @@ CREATE TABLE "Document" (
     id integer NOT NULL,
     interviewed integer,
     interviewer integer,
-    date timestamp with time zone,
-    content text
+    date timestamp with time zone
 );
 
 
@@ -201,11 +213,19 @@ ALTER TABLE "Person" ALTER COLUMN id SET DEFAULT nextval('"Person_id_seq"'::regc
 
 
 --
--- Name: Catégorie_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
+-- Name: CatÃ©gorie_pkey; Type: CONSTRAINT; Schema: public; Owner: socio; Tablespace: 
 --
 
 ALTER TABLE ONLY "Category"
-    ADD CONSTRAINT "Catégorie_pkey" PRIMARY KEY (id);
+    ADD CONSTRAINT "CatÃ©gorie_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: Content_pkey; Type: CONSTRAINT; Schema: public; Owner: hypolite; Tablespace: 
+--
+
+ALTER TABLE ONLY "Content"
+    ADD CONSTRAINT "Content_pkey" PRIMARY KEY (doc, line);
 
 
 --
@@ -241,6 +261,14 @@ ALTER TABLE ONLY "Belongs"
 
 
 --
+-- Name: Content_doc_fkey; Type: FK CONSTRAINT; Schema: public; Owner: hypolite
+--
+
+ALTER TABLE ONLY "Content"
+    ADD CONSTRAINT "Content_doc_fkey" FOREIGN KEY (doc) REFERENCES "Document"(id);
+
+
+--
 -- Name: Document_interviewed_fkey; Type: FK CONSTRAINT; Schema: public; Owner: socio
 --
 
@@ -264,6 +292,34 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres91;
 GRANT ALL ON SCHEMA public TO postgres91;
 GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- Name: Content; Type: ACL; Schema: public; Owner: hypolite
+--
+
+REVOKE ALL ON TABLE "Content" FROM PUBLIC;
+REVOKE ALL ON TABLE "Content" FROM hypolite;
+GRANT ALL ON TABLE "Content" TO hypolite;
+GRANT ALL ON TABLE "Content" TO socio;
+
+
+--
+-- Name: Document; Type: ACL; Schema: public; Owner: socio
+--
+
+REVOKE ALL ON TABLE "Document" FROM PUBLIC;
+REVOKE ALL ON TABLE "Document" FROM socio;
+GRANT ALL ON TABLE "Document" TO socio;
+
+
+--
+-- Name: Person; Type: ACL; Schema: public; Owner: socio
+--
+
+REVOKE ALL ON TABLE "Person" FROM PUBLIC;
+REVOKE ALL ON TABLE "Person" FROM socio;
+GRANT ALL ON TABLE "Person" TO socio;
 
 
 --
