@@ -192,6 +192,17 @@ ALTER SEQUENCE "Person_id_seq" OWNED BY "Person".id;
 
 
 --
+-- Name: Stopwords; Type: TABLE; Schema: public; Owner: socio; Tablespace: 
+--
+
+CREATE TABLE "Stopwords" (
+    word character varying(255)
+);
+
+
+ALTER TABLE public."Stopwords" OWNER TO socio;
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: socio
 --
 

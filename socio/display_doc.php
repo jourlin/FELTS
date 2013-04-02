@@ -66,11 +66,11 @@ if(isset($_GET['id'])){
 	echo "</table></center>\n";
 }
 if(isset($_GET['entity'])){
-	$request = 'SELECT content FROM "Content","Entities", "Belongs" WHERE doc=id and "Content".line="Entities".line AND substring(entity,'."'".$_GET['entity']."'".') IS NOT NULL AND "Belongs".document="Content".doc AND "Belongs".category='.$_GET['cat'].'ORDER BY id ASC;';
+	$request = 'SELECT "FirstName", "LastName", interviewed, "Content".line, content FROM "Person", "Document", "Content","Entities", "Belongs" WHERE "Person".id="Document".interviewed AND "Document".id="Entities".id AND doc="Entities".id and "Content".line="Entities".line AND substring(entity,'."'".$_GET['entity']."'".') IS NOT NULL AND "Belongs".document="Content".doc AND "Belongs".category='.$_GET['cat'].' ORDER BY doc, line ASC;';
         if($result =  pg_query($request)){
-		echo "<center><table>";
+		echo "<center><table><tr><th>Enquêté</th><th>ligne</th><th>Contenu</th></tr>";
         	while ($row = pg_fetch_row($result))
-                	echo "<tr><td>".$row[0]."</td></tr>";
+                	echo "<tr><td>$row[0] $row[1] (doc $row[2])</td><td>$row[3]</td><td>$row[4]</td></tr>";
        	 	echo "</table></center>\n";
 	}
 	else

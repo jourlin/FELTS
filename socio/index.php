@@ -161,6 +161,10 @@ function RemoveColored($text){
 }					
 				
 				$content=pg_escape_string(strip_tags(RemoveColored(strtolower(file_get_contents($filename)))));
+				$content=strtr($content, "\n", " "); // ignore carriage returns
+				$punctuation=array("?","!",";",":","»","...", "…", ".");
+				$punctuationcr=array("?\n","!\n",";\n",":\n","»\n","...\n", "…\n",".\n");
+				$content=str_replace($punctuation, $punctuationcr, $content); // make one line for each sentence
 				if($content[strlen($content)-1]!="\n")
 					$content=$content."\n"; 
 				// (the absence of a newline at the end of file blocks felts_server)
