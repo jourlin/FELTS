@@ -1,7 +1,7 @@
 # DICT is a file containing one term per line. A term is a list of words separated by a single space.
 DICT = dic/sample.dic
 BDICT= $(basename $(DICT))
-all:	cmph mph bin/felts_server bin/felts_client
+all:	 /usr/local/include/cmph.h mph bin/felts_server bin/felts_client
 clean:	
 	rm -f *~ src/*~ bin/*
 /usr/local/include/cmph.h:	
