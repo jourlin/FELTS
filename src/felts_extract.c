@@ -74,7 +74,10 @@ unsigned char* FindLonguestTerm(char * start)
 	TERM *tnode;
 	if(sscanf(current,"%s", word)==EOF)
 		return NULL;
-	wordid=DictFind(word, &dict); /* identify current word */
+	if(HASH)
+		wordid=cmph_search(hash, word, (cmph_uint32)strlen(word));
+	else
+		wordid=DictFind(word, &dict); /* identify current word */
 	if(thesaurus[wordid].wordid==0) /* word was not recognized */
 		return NULL;
 	tnode=&thesaurus[wordid];
@@ -83,7 +86,10 @@ unsigned char* FindLonguestTerm(char * start)
 		longuest=current;
 	while(sscanf(current,"%s", word)!=EOF)
 	{
-		tnode=Find(tnode, DictFind(word, &dict));
+		if(HASH)
+			tnode=Find(tnode, cmph_search(hash, word, (cmph_uint32)strlen(word)));
+		else
+			tnode=Find(tnode, DictFind(word, &dict));
 		if(tnode==NULL)
 			break;
 		current+= strlen(word)+1;

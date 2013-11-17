@@ -44,14 +44,16 @@
     Fax : +33 4 90 84 35 01
 
 */
+#include <cmph.h>		// http://cmph.sourceforge.net/ (LGPL / MPL 1.1.)
 
 #define CRLF "\r\n"
 #define VERSION "FELTS 0.0.0"
 #define DEFAULT_PORT 8000
 #define DEFAULT_DIC "./dic/sample.dic"
+#define DEFAULT_HASH_FN "./dic/sample.mph"
 #define FATAL(err) { perror((char *) err); exit(1);}
 
-#define MAXWORDS 	2000000
+#define MAXWORDS 	6000000
 #define LINEMAXLENGTH	(1024*1024)
 #define BUFFERMAXLENGTH	(1024*1024)
 #define TRUE 		1
@@ -80,4 +82,5 @@ extern void failure(char textin[]);
 extern void invalid_request();
 extern int  tcp_server (int port_number);
 extern int  wait_client (int fd_server);
-
+extern int HASH;
+extern cmph_t *hash ;

@@ -1,0 +1,10 @@
+miller_rabin.lo: miller_rabin.c /usr/include/stdc-predef.h \
+ /usr/include/x86_64-linux-gnu/bits/predefs.h miller_rabin.h cmph_types.h
+
+/usr/include/stdc-predef.h:
+
+/usr/include/x86_64-linux-gnu/bits/predefs.h:
+
+miller_rabin.h:
+
+cmph_types.h:

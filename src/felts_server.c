@@ -53,10 +53,14 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-
+#include <cmph.h>		// http://cmph.sourceforge.net/ (LGPL / MPL 1.1.)
 #include "felts.h"
 
 unsigned long bytecount=0;
+unsigned long maxwords=0;
+int HASH=TRUE;
+cmph_t *hash ;
+
 NODE dict;
 TERM *thesaurus;	/* array of (multi-word) terms */
 
@@ -128,8 +132,9 @@ void usage(char prog[])
      printf("Options :\n"
             "-h\tthis message\n"
             "-p port\tport number          [%d]\n"
-            "-d dic \tdictionary [%s]\n",
-            DEFAULT_PORT, DEFAULT_DIC);
+            "-d dic \tdictionary [%s]\n"
+	    "-f mph \tminimal_perfect_hash_file [%s]\n",
+            DEFAULT_PORT, DEFAULT_DIC, DEFAULT_HASH_FN);
 }
 
 char * GetLastWord(char *word, char * current, char *start)
@@ -163,13 +168,15 @@ int main(int argc, char *argv[])
 
 	int i;
 	FILE *DictFile;
+	FILE *MPHFFile;
 
 	int   port =       DEFAULT_PORT;
      	char *dic = DEFAULT_DIC;	/* dictionary file */
-     	char c;
+     	char *hash_fn = DEFAULT_HASH_FN;	/* dictionary file */
+
+	char c;
 	
-	
-     	while ((c = getopt(argc, argv, "hp:d:")) != -1)
+     	while ((c = getopt(argc, argv, "hp:d:f:")) != -1)
           switch (c) {
           	case 'h':
                		usage(argv[0]);
@@ -181,11 +188,13 @@ int main(int argc, char *argv[])
           	case 'd':
                		dic = optarg;
                	break;
+          	case 'f':
+               		hash_fn = optarg; 
+               	break;
           	case '?':
                		fprintf(stderr, "unrecognized option -%c. -h for help.\n", optopt);
                	break;
-          }
-	  
+        }  
 	printf("Serving dictionary %s on port %d\n", dic, port);
 	/* Initialisation */
 	#ifdef DEBUG
@@ -196,50 +205,58 @@ int main(int argc, char *argv[])
 	{
 		fprintf(stderr, "Could not open %s\n", dic);
 		exit(-1);
+	}
+	if((MPHFFile=fopen(hash_fn, "r"))==NULL)
+	{
+		fprintf(stderr, "Could not open %s\n", hash_fn);
+		fprintf(stderr, "Loading dictionnary as a potentially huge tree\n");
 	}	
 	Blank(cnode);
 	nbterms=0;
-	/* Load dictionary in RAM */
-	while(!feof(DictFile))
-	{
-		#ifdef DEBUG
-		nbterms++;
-		if(nbterms>1000) 
-			break;
-		#endif
-
-		cchar=fgetc(DictFile);
-		if(cchar=='\047')			/* tranforms simple quotes in spaces */
-			cchar=' ';
-		if(cchar=='\n'||cchar==' ')
+	if(MPHFFile==NULL)
+		HASH=FALSE;
+	if(!HASH)						
+		while(!feof(DictFile))				/* Load dictionary in RAM */
 		{
-			if(nbwords%500000==0)
-				printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
-
-			if(cnode->number==0) // Word is unseen ?
-				cnode->number=++nbwords;
-			cnode=&dict;
+			#ifdef DEBUG
+			nbterms++;
+			if(nbterms>1000) 
+				break;
+			#endif
+			cchar=fgetc(DictFile);
+			if(cchar=='\047')			/* tranforms simple quotes in spaces */
+				cchar=' ';
+			if(cchar=='\n'||cchar==' ')
+			{
+				if(nbwords%500000==0)
+					printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
+	
+				if(cnode->number==0) // Word is unseen ?
+					cnode->number=++nbwords;
+				cnode=&dict;
+			}
+			else if(cnode->next[cchar]==NULL)
+			{
+				cnode->next[cchar]=(NODE *) malloc(sizeof(NODE));
+				bytecount+=sizeof(NODE);
+				Blank(cnode->next[cchar]);
+				cnode=cnode->next[cchar];
+				cnode->number=0; 
+			}
+			else
+				cnode=cnode->next[cchar];		
 		}
-		else if(cnode->next[cchar]==NULL)
-		{
-			cnode->next[cchar]=(NODE *) malloc(sizeof(NODE));
-			bytecount+=sizeof(NODE);
-			Blank(cnode->next[cchar]);
-			cnode=cnode->next[cchar];
-			cnode->number=0; 
-		}
-		else
-			cnode=cnode->next[cchar];
-
-		
-	}
+	else							/* Load the minimal perfect hash function */
+		hash = cmph_load(MPHFFile); 	
 	fclose(DictFile);
-	printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
+	if(!HASH)
+		printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
+	else
+		printf("Hash Function loaded\n");
 	
 	/* Thesaurus initialisation */
 	thesaurus= (TERM *) malloc(MAXWORDS*sizeof(TERM));
 	bytecount+=MAXWORDS*sizeof(TERM);
-	printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
 	for(nbwords=0; nbwords<MAXWORDS; nbwords++)
 	{
 		thesaurus[nbwords].next=NULL;
@@ -272,26 +289,39 @@ int main(int argc, char *argv[])
 			break;
 #endif
 		
-		
 		current=input+strlen(input)-2; /* -2 allows to ignore terminal \n\000 */
 		current=GetLastWord(word, current, input);
-		nbwords=DictFind(word, &dict); /* identify current word */
+		if(!HASH)
+			nbwords=DictFind(word, &dict); /* identify current word */
+		else
+			nbwords=cmph_search(hash, word, (cmph_uint32)strlen(word));
+		if(maxwords<nbwords)
+			maxwords=nbwords;
 		thesaurus[nbwords].wordid=nbwords;
 		tnode=&thesaurus[nbwords];	
 		/* current points to the last word's last character of current term */
 		while(current>input) /* get words from right to left */
 		{
 			current=GetLastWord(word, current, input);
-			tnode=FindOrCreateNextAlternative(tnode, DictFind(word, &dict));
+			if(!HASH)
+				nbwords= DictFind(word, &dict);
+			else
+				nbwords= cmph_search(hash, word, (cmph_uint32)strlen(word));
+			tnode=FindOrCreateNextAlternative(tnode, nbwords);
+			if(maxwords<nbwords)
+				maxwords=nbwords;
 		}
 		tnode->isfinal=TRUE;
 		if(nbterms%1000000==0)
-			printf("Thesaurus loaded with %ld terms (%ld Mb)\n", nbterms, bytecount/1024/1024);
+			printf("Thesaurus loaded with %ld terms and %ld distinct words (%ld Mb)\n", nbterms, maxwords, bytecount/1024/1024);
 	};
 	fclose(DictFile);
 	printf("Thesaurus loaded with %ld terms (%ld Mb)\n", nbterms, bytecount/1024/1024);
 	
 	demarrer_serveur(port, dic);
+	//Destroy hash
+      	cmph_destroy(hash);
+	fclose(MPHFFile);
     	exit(EXIT_SUCCESS);
      	return; 
 }
