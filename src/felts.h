@@ -53,7 +53,8 @@
 #define DEFAULT_HASH_FN "./dic/sample.mph"
 #define FATAL(err) { perror((char *) err); exit(1);}
 
-#define MAXWORDS 	6000000
+#define MAXWORDS 	5000000
+#define WORDMAXLENGTH	200
 #define LINEMAXLENGTH	(1024*1024)
 #define BUFFERMAXLENGTH	(1024*1024)
 #define TRUE 		1
@@ -74,6 +75,7 @@ typedef struct Term {
 
 extern NODE dict;
 extern TERM *thesaurus;
+extern unsigned char LookupTable[MAXWORDS][WORDMAXLENGTH];
 extern char * GetLastWord(char *word, char * current, char *start);
 
 extern void serve_client (int fd_client);

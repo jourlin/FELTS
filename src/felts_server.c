@@ -63,7 +63,7 @@ cmph_t *hash ;
 
 NODE dict;
 TERM *thesaurus;	/* array of (multi-word) terms */
-
+unsigned char LookupTable[MAXWORDS][WORDMAXLENGTH];
 	
 void error(const char *msg)
 {
@@ -246,8 +246,15 @@ int main(int argc, char *argv[])
 			else
 				cnode=cnode->next[cchar];		
 		}
-	else							/* Load the minimal perfect hash function */
+	else{						/* Load the minimal perfect hash function */
 		hash = cmph_load(MPHFFile); 	
+		for(i=0;i<MAXWORDS;i++)			/* Make empty strings */
+			LookupTable[i][0]=0;
+		while(!feof(DictFile)){				/* Load dictionary in RAM */
+			fscanf(DictFile, "%s", word);
+			strcpy(LookupTable[cmph_search(hash, word, (cmph_uint32)strlen(word))],word);		
+		}
+	}
 	fclose(DictFile);
 	if(!HASH)
 		printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
