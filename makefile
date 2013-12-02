@@ -7,9 +7,8 @@ clean:
 /usr/local/include/cmph.h:	
 	cd "cmph-2.0";./configure;make;sudo make install;cd ..
 mph:	/usr/local/include/cmph.h $(DICT)
-	cat $(DICT) | tr ' ' '\n'| sort -u > $(BDICT).words
-	cmph -v -g -a chd $(BDICT).words
-	mv $(BDICT).words.mph $(BDICT).mph
+	cmph -v -g -a chd $(DICT)
+	mv $(DICT).mph $(BDICT).mph
 	
 bin/felts_server:	src/felts_server.c src/felts.h src/tcp_server.c src/felts_extract.c
 	gcc -o bin/felts_server src/felts_server.c src/tcp_server.c src/felts_extract.c -lpthread -lcmph

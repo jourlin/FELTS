@@ -152,7 +152,9 @@ int main(int argc, char *argv[])
 	if((MPHFFile=fopen(hash_fn, "r"))==NULL){
 		fprintf(stderr, "Error : Could not open %s\n", hash_fn);
 		exit(-1);
-	};	
+	}
+	else
+		printf("Loading hash function %s\n",hash_fn);	
 
 	/* Load the minimal perfect hash function */
 	hash = cmph_load(MPHFFile); 	

@@ -99,14 +99,13 @@ unsigned char * find_word_end(unsigned char *s)
 void serve_client(int fdClient)
 {
 	FILE * in, * out;
-	unsigned char *WordStart, *WordEnd;
+	unsigned char *WordStart, *WordEnd, *TermStart;
 	unsigned int Start, End, nwords;
 	unsigned char buffer[BUFFERMAXLENGTH];
 	unsigned char CurrentTerm[BUFFERMAXLENGTH];
-  	
+  	cmph_uint32 HashIndex;
   	int fd2;
   	int AtLeastOneTerm;
-
   	if((in  = fdopen(fdClient,"r"))==NULL) {
 		perror("While opening fdClient for reading ");
 		exit(EXIT_FAILURE);
@@ -115,40 +114,48 @@ void serve_client(int fdClient)
 	out = fdopen(fd2, "w");
 
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
+		if(buffer[strlen(buffer)-1]!='\n'){
+			fprintf(stderr, "Error: line too long\n");
+			exit(-1);
+		}
 		if(buffer[0]=='\0'){				/* do not process empty lines */
 			fprintf(out,"\n"); 
 			fflush(out); 
 			continue;	   			/* Process next line */
 		}
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
-		WordStart=buffer;		/* initialize current character */
-		do{
-			Start=0;
+		TermStart=buffer;		/* initialize current character */
+		TermStart=skip_blanks(TermStart);
+		AtLeastOneTerm=FALSE;
+		do{				/* For each word in line */
 			CurrentTerm[0]='\0';
 			nwords=0;
-			WordStart=skip_blanks(WordStart);
-			Start=buffer-WordStart;
-			do{
+			WordStart=skip_blanks(TermStart);
+			Start=WordStart-buffer;
+			do{					/* For each possible term word length */
+
 				WordStart=skip_blanks(WordStart);
 				WordEnd=find_word_end(WordStart);
-				End=buffer-WordEnd;
-				strncat(CurrentTerm, WordStart, WordEnd-WordStart);
+				End=WordEnd-buffer;
+				strncat(CurrentTerm, WordStart, WordEnd-WordStart+1);
 				nwords++;
-				if(strcmp(LookupTable[cmph_search(hash, CurrentTerm, (cmph_uint32)strlen(CurrentTerm))], CurrentTerm)==0){
+				HashIndex=cmph_search(hash, CurrentTerm, (cmph_uint32)strlen(CurrentTerm));
+				if(HashIndex<=NDistinctTerms && strcmp(LookupTable[HashIndex], CurrentTerm)==0){
 					fprintf(out, "%u %u \"%s\"\n", Start, End, CurrentTerm);
 					AtLeastOneTerm=TRUE;
 				}
-				if(!AtLeastOneTerm)
-					fprintf(out,"\n");
 				WordStart=WordEnd+1;
 				if(*WordStart!='\n')
 					strcat(CurrentTerm, " "); 
 			}while(*WordStart!='\n' && nwords<MaxWordsPerTerm);
-		}while(*WordStart!='\n');
+			TermStart=find_word_end(TermStart)+1;
+			TermStart=skip_blanks(TermStart);
+		}while(*TermStart!='\n');
+		if(!AtLeastOneTerm)
+			fprintf(out,"\n"); /* end of response */
 		fprintf(out,"\n"); /* end of response */
-		fflush(out); 
+		fflush(out);
 	}		
-	
 	fclose(in);
 	fflush(out);  
 	fclose(out);
