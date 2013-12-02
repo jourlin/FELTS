@@ -56,74 +56,15 @@
 #include <cmph.h>		// http://cmph.sourceforge.net/ (LGPL / MPL 1.1.)
 #include "felts.h"
 
-unsigned long bytecount=0;
-unsigned long maxwords=0;
-int HASH=TRUE;
 cmph_t *hash ;
-
-NODE dict;
-TERM *thesaurus;	/* array of (multi-word) terms */
-unsigned char LookupTable[MAXWORDS][WORDMAXLENGTH];
+unsigned long int NDistinctTerms=0, MaxWordsPerTerm=0, MaxCharsPerTerm=0;
+unsigned char **LookupTable;
 	
 void error(const char *msg)
 {
     perror(msg);
     exit(1);
 }
-
-TERM* FindOrCreateNextAlternative(TERM *current, unsigned long int wordid)
-{
-	
-	if(current->next==NULL) /* A new next alternative */
-	{
-		current->next=(TERM *) malloc(sizeof(TERM));
-		bytecount+=sizeof(TERM);
-		current=current->next;
-		current->wordid=wordid;
-		current->next=NULL;
-		current->alter=NULL;
-		current->isfinal=FALSE;
-		return current;
-	}
-	current=current->next;
-	while(current->alter!=NULL && current->wordid!=wordid)
-		current=current->alter;
-	if(current->wordid==wordid)
-		return current;
-	else
-	{
-		current->alter=(TERM *) malloc(sizeof(TERM));
-		bytecount+=sizeof(TERM);
-		current=current->alter;
-		current->wordid=wordid;
-		current->next=NULL;
-		current->alter=NULL;
-		current->isfinal=0;
-		return current;
-	}
-};
-
-unsigned long int DictFind(unsigned char *word, NODE *dict)
-{
-	unsigned char *pt=word;
-	NODE *node=dict;
-	while((*pt!='\n') && (*pt!='\0') && (node->next[*pt]!=NULL))
-		node=node->next[*pt++];
-	if(((*pt=='\n') || (*pt=='\0')) && (node->number>0))
-		return node->number;
-	else
-		return 0;	
-}
-
-void Blank(NODE *node)
-{
-	int i;
-	if(node!=NULL)
-		for(i=0; i<=255; i++)
-			node->next[i]=NULL;
-	node->number=0;	
-}
-
 
 /* -------------------------------------------------------------*/
 void usage(char prog[])
@@ -137,45 +78,26 @@ void usage(char prog[])
             DEFAULT_PORT, DEFAULT_DIC, DEFAULT_HASH_FN);
 }
 
-char * GetLastWord(char *word, char * current, char *start)
-{
-	int i=0;
-	while(current>=start && *current!=' '){
-		current--;
-		i++;
-	};
-	current++;	/* current points to the first character of current word */
-	strncpy(word, current, i);
-	word[i]='\0';
-	if(current!=start)
-		current--;
-	while((current>=start) && *current==' ')
-		current--; 
-	return current;
-}
 
 /* -------------------------------------------------------------*/
 
 int main(int argc, char *argv[])
 {
-	/* Thesaurus variables */
-	NODE  *cnode=&dict; /* dictionary (words) */
-	TERM  *tnode;
-	unsigned char cchar;
-	unsigned long int nbwords=0, nbterms=0;
-	unsigned char input[LINEMAXLENGTH], *current;
-	unsigned char word[LINEMAXLENGTH];
 
-	int i;
-	FILE *DictFile;
+	unsigned long int WordsPerTerm, CharsPerTerm;
+
 	FILE *MPHFFile;
-
-	int   port =       DEFAULT_PORT;
-     	char *dic = DEFAULT_DIC;	/* dictionary file */
-     	char *hash_fn = DEFAULT_HASH_FN;	/* dictionary file */
-
+	int   port 	= DEFAULT_PORT;
+     	char *hash_fn 	= DEFAULT_HASH_FN;	/* dictionary file */
 	char c;
-	
+	int i;
+	NDistinctTerms=0;
+	WordsPerTerm=0;
+	CharsPerTerm=0;
+	FILE *DictFile;
+	char *DictFileName;
+	char *term;
+
      	while ((c = getopt(argc, argv, "hp:d:f:")) != -1)
           switch (c) {
           	case 'h':
@@ -186,7 +108,7 @@ int main(int argc, char *argv[])
                		port = atoi(optarg);
                	break;
           	case 'd':
-               		dic = optarg;
+               		DictFileName = optarg;
                	break;
           	case 'f':
                		hash_fn = optarg; 
@@ -195,138 +117,57 @@ int main(int argc, char *argv[])
                		fprintf(stderr, "unrecognized option -%c. -h for help.\n", optopt);
                	break;
         }  
-	printf("Serving dictionary %s on port %d\n", dic, port);
-	/* Initialisation */
-	#ifdef DEBUG
-		printf("WARNING : %s was compiled with DEBUG and will process a maximum of 1000 terms\n", argv[0]);
-	#endif
+	printf("Initialising server for dictionary %s on port %d\n", DictFileName, port);
 	
-	if((DictFile=fopen(dic, "r"))==NULL)
+	if((DictFile=fopen(DictFileName, "r"))==NULL)
 	{
-		fprintf(stderr, "Could not open %s\n", dic);
+		fprintf(stderr, "Could not open %s\n", DictFileName);
 		exit(-1);
 	}
-	if((MPHFFile=fopen(hash_fn, "r"))==NULL)
-	{
-		fprintf(stderr, "Could not open %s\n", hash_fn);
-		fprintf(stderr, "Loading dictionnary as a potentially huge tree\n");
-	}	
-	Blank(cnode);
-	nbterms=0;
-	if(MPHFFile==NULL)
-		HASH=FALSE;
-	if(!HASH)						
-		while(!feof(DictFile))				/* Load dictionary in RAM */
-		{
-			#ifdef DEBUG
-			nbterms++;
-			if(nbterms>1000) 
-				break;
-			#endif
-			cchar=fgetc(DictFile);
-			if(cchar=='\047')			/* tranforms simple quotes in spaces */
-				cchar=' ';
-			if(cchar=='\n'||cchar==' ')
-			{
-				if(nbwords%500000==0)
-					printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
-	
-				if(cnode->number==0) // Word is unseen ?
-					cnode->number=++nbwords;
-				cnode=&dict;
-			}
-			else if(cnode->next[cchar]==NULL)
-			{
-				cnode->next[cchar]=(NODE *) malloc(sizeof(NODE));
-				bytecount+=sizeof(NODE);
-				Blank(cnode->next[cchar]);
-				cnode=cnode->next[cchar];
-				cnode->number=0; 
-			}
-			else
-				cnode=cnode->next[cchar];		
-		}
-	else{						/* Load the minimal perfect hash function */
-		hash = cmph_load(MPHFFile); 	
-		for(i=0;i<MAXWORDS;i++)			/* Make empty strings */
-			LookupTable[i][0]=0;
-		while(!feof(DictFile)){				/* Load dictionary in RAM */
-			fscanf(DictFile, "%s", word);
-			strcpy(LookupTable[cmph_search(hash, word, (cmph_uint32)strlen(word))],word);		
-		}
+	while(!feof(DictFile)){				/* Get limits */
+		WordsPerTerm=0;
+		CharsPerTerm=0;
+		do{					/* Process a term */
+			CharsPerTerm=0;
+			do{
+				c=fgetc(DictFile);
+				CharsPerTerm++;
+			}while(!feof(DictFile) && (c==' ' || c=='\t'));     /* Skip spaces    */
+			while(c!=' ' && c!='\t' && c!='\n' && !feof(DictFile)){			/* Process a word */
+				c=fgetc(DictFile);
+				CharsPerTerm++;
+			};
+			WordsPerTerm++;
+		}while(c!='\n' && !feof(DictFile));
+		NDistinctTerms++;
+		if(WordsPerTerm>MaxWordsPerTerm)
+			MaxWordsPerTerm=WordsPerTerm;
+		WordsPerTerm=0;
+		if(CharsPerTerm>MaxCharsPerTerm)
+			MaxCharsPerTerm=CharsPerTerm;
+		CharsPerTerm=0;
 	}
 	fclose(DictFile);
-	if(!HASH)
-		printf("Dictionary loaded with %ld words (%ld Mb)\n", nbwords, bytecount/1024/1024);
-	else
-		printf("Hash Function loaded\n");
-	
-	/* Thesaurus initialisation */
-	thesaurus= (TERM *) malloc(MAXWORDS*sizeof(TERM));
-	bytecount+=MAXWORDS*sizeof(TERM);
-	for(nbwords=0; nbwords<MAXWORDS; nbwords++)
-	{
-		thesaurus[nbwords].next=NULL;
-		thesaurus[nbwords].alter=NULL;
-		thesaurus[nbwords].wordid=0;
-		thesaurus[nbwords].isfinal=TRUE;
-	}	
-	if((DictFile=fopen(dic, "r"))==NULL)
-	{
-		fprintf(stderr, "Could not open %s\n", dic);
+	printf("Found %lu distinct terms composed of a maximum of %lu words and a maximum of %lu bytes\n", NDistinctTerms, MaxWordsPerTerm, MaxCharsPerTerm);
+	if((MPHFFile=fopen(hash_fn, "r"))==NULL){
+		fprintf(stderr, "Error : Could not open %s\n", hash_fn);
 		exit(-1);
+	};	
+
+	/* Load the minimal perfect hash function */
+	hash = cmph_load(MPHFFile); 	
+	for(i=0;i<NDistinctTerms;i++)			/* Make empty strings */
+		LookupTable[i][0]=0;
+	while(!feof(DictFile)){				/* Load dictionary in RAM */
+		fscanf(DictFile, "%s", term);
+		strcpy(LookupTable[cmph_search(hash, term, (cmph_uint32)strlen(term))],term);		
 	}
-	/* Load Thesaurus */
-	nbterms=0;
-	while(!feof(DictFile))
-	{
-		if(fgets(input, LINEMAXLENGTH, DictFile)==NULL)
-			break;
-					/* Turn simple quotes into spaces */
-		current=input;
-		while(*current!='\0'){
-			if(*current=='\047')
-				*current=' ';
-			current++;
-		};
-					/* Process Term */
-		nbterms++;
-#ifdef DEBUG
-		if(nbterms>1000) 
-			break;
-#endif
-		
-		current=input+strlen(input)-2; /* -2 allows to ignore terminal \n\000 */
-		current=GetLastWord(word, current, input);
-		if(!HASH)
-			nbwords=DictFind(word, &dict); /* identify current word */
-		else
-			nbwords=cmph_search(hash, word, (cmph_uint32)strlen(word));
-		if(maxwords<nbwords)
-			maxwords=nbwords;
-		thesaurus[nbwords].wordid=nbwords;
-		tnode=&thesaurus[nbwords];	
-		/* current points to the last word's last character of current term */
-		while(current>input) /* get words from right to left */
-		{
-			current=GetLastWord(word, current, input);
-			if(!HASH)
-				nbwords= DictFind(word, &dict);
-			else
-				nbwords= cmph_search(hash, word, (cmph_uint32)strlen(word));
-			tnode=FindOrCreateNextAlternative(tnode, nbwords);
-			if(maxwords<nbwords)
-				maxwords=nbwords;
-		}
-		tnode->isfinal=TRUE;
-		if(nbterms%1000000==0)
-			printf("Thesaurus loaded with %ld terms and %ld distinct words (%ld Mb)\n", nbterms, maxwords, bytecount/1024/1024);
-	};
 	fclose(DictFile);
-	printf("Thesaurus loaded with %ld terms (%ld Mb)\n", nbterms, bytecount/1024/1024);
+	printf("Hash Function loaded\n");
 	
-	demarrer_serveur(port, dic);
-	//Destroy hash
+	
+	// demarrer_serveur(port, dic);
+	/* Destroy hash */
       	cmph_destroy(hash);
 	fclose(MPHFFile);
     	exit(EXIT_SUCCESS);

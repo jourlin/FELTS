@@ -53,59 +53,6 @@
 
 #include "felts.h"
 
-TERM* Find(TERM *current, unsigned long int wordid)
-{
-	
-	if(current->next==NULL) 
-		return NULL;
-	current=current->next;
-	while(current->alter!=NULL && current->wordid!=wordid)
-		current=current->alter;
-	if(current->wordid==wordid)
-		return current;
-	else
-		return NULL;
-};
-
-unsigned char* FindLonguestTerm(char * start)
-{
-	unsigned char word[LINEMAXLENGTH], *current=start, *longuest=NULL;
-	unsigned long int wordid;
-	TERM *tnode;
-	if(sscanf(current,"%s", word)==EOF)
-		return NULL;
-	if(HASH){
-		wordid=cmph_search(hash, word, (cmph_uint32)strlen(word));
-		if(strcmp(LookupTable[wordid], word)!=0)
-			return NULL;
-	}
-	else{
-		wordid=DictFind(word, &dict); /* identify current word */
-		if(thesaurus[wordid].wordid==0) /* word was not recognized */
-			return NULL;
-	}
-	tnode=&thesaurus[wordid];
-	current+=strlen(word)+1;
-	if(tnode->isfinal)
-		longuest=current;
-	while(sscanf(current,"%s", word)!=EOF)
-	{
-		if(HASH){
-			if(strcmp(LookupTable[cmph_search(hash, word, (cmph_uint32)strlen(word))], word)!=0)
-				tnode=NULL;
-			else
-				tnode=Find(tnode, cmph_search(hash, word, (cmph_uint32)strlen(word)));
-		}
-		else
-			tnode=Find(tnode, DictFind(word, &dict));
-		if(tnode==NULL)
-			break;
-		current+= strlen(word)+1;
-		if(tnode->isfinal)
-			longuest=current;
-	}
-	return longuest;
-}
 
 void NormaliseUTF8(unsigned char *buffer)
 {
@@ -142,56 +89,6 @@ unsigned char * skip_blanks(unsigned char *s)
 	return s;
 }
 
-void InverseWords(char *line) {
-	static char tmp[BUFFERMAXLENGTH];
-	static char *backward, *forward;
-	static char word[LINEMAXLENGTH];
-
-	backward=line+strlen(line)-1;	/* skip \000 */
-	forward=tmp;
-	if(*backward=='\n')		/* skip \n   */
-		backward--;
-	while(*backward==' ')		/* skip left spaces */
-		backward--;
-	while(backward>line) {
-		backward=GetLastWord(word, backward, line);
-		strcpy(forward, word);
-		forward+=strlen(word);
-		if(backward>line)
-			*forward++=' ';
-	}
-	*forward='\0';
-	strcpy(line, tmp);	
-}
-
-int CountWords(char *line){
-	int count=0;
-	while(*line==' ')
-		line++; 	/* skip blanks */
-	while(*line!='\0' && *line!='\n'){
-		while(*line!='\0' && *line!=' ') /* skip word */
-			line++;
-		count++;
-		while(*line==' '||*line=='\n')
-			line++; 	/* skip blanks */
-	}
-	return count;
-}
-
-int OffsetWordNumber(char *line, int posword){
-	char *pos=line;
-	while(*pos==' ')
-		pos++; 	/* skip blanks */
-	while(posword!=0 && *pos!='\0'){
-		while(*pos!='\0' && *pos!=' ') /* skip word */
-			pos++;
-		posword--;
-		while(*pos==' ')
-			pos++; 	/* skip blanks */
-	}
-	return pos-line;
-}
-
 
 void serve_client(int fdClient)
 {
@@ -220,7 +117,7 @@ void serve_client(int fdClient)
 		}
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
 		strcpy(invbuffer, buffer);
-		InverseWords(invbuffer);		/* Read words for right to left */
+
 		//printf("**%s**\n", invbuffer);
 		current=invbuffer;			/* initialize current character */
 		current=skip_blanks(current);
