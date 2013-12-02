@@ -156,17 +156,27 @@ int main(int argc, char *argv[])
 
 	/* Load the minimal perfect hash function */
 	hash = cmph_load(MPHFFile); 	
-	for(i=0;i<NDistinctTerms;i++)			/* Make empty strings */
-		LookupTable[i][0]=0;
-	while(!feof(DictFile)){				/* Load dictionary in RAM */
-		fscanf(DictFile, "%s", term);
+	LookupTable=(unsigned char **) malloc(NDistinctTerms*sizeof(unsigned char*));
+	for(i=0;i<NDistinctTerms;i++){			/* Make empty strings */
+		LookupTable[i]=(char *) malloc(MaxCharsPerTerm*sizeof(unsigned char));
+		LookupTable[i][0]='\0';
+	}
+	term=(char *) malloc(MaxCharsPerTerm*sizeof(unsigned char));
+	if((DictFile=fopen(DictFileName, "r"))==NULL)
+	{
+		fprintf(stderr, "Could not open %s\n", DictFileName);
+		exit(-1);
+	}
+	while(!feof(DictFile)){				/* Load dictionary in RAM 	*/
+		fgets(term, MaxCharsPerTerm*sizeof(unsigned char), DictFile);
+		term[strlen(term)-1]=0;			/* Replace \n by \0		*/
 		strcpy(LookupTable[cmph_search(hash, term, (cmph_uint32)strlen(term))],term);		
 	}
 	fclose(DictFile);
 	printf("Hash Function loaded\n");
 	
 	
-	// demarrer_serveur(port, dic);
+	demarrer_serveur(port, DictFileName);
 	/* Destroy hash */
       	cmph_destroy(hash);
 	fclose(MPHFFile);

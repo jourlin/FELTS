@@ -89,19 +89,24 @@ unsigned char * skip_blanks(unsigned char *s)
 	return s;
 }
 
+unsigned char * find_word_end(unsigned char *s)
+{
+	while(*s!=' ' && *s!='\t' && *s!='\n')
+		s++;
+	return s-1;
+}
 
 void serve_client(int fdClient)
 {
-
-	unsigned char *eterm, term[LINEMAXLENGTH];	/* pointers to start and end of term */
 	FILE * in, * out;
-  	unsigned char word[LINEMAXLENGTH];
-	unsigned char *current;
+	unsigned char *WordStart, *WordEnd;
+	unsigned int Start, End, nwords;
 	unsigned char buffer[BUFFERMAXLENGTH];
-	unsigned char invbuffer[BUFFERMAXLENGTH];
-	int pos, posword;
+	unsigned char CurrentTerm[BUFFERMAXLENGTH];
+  	
   	int fd2;
   	int AtLeastOneTerm;
+
   	if((in  = fdopen(fdClient,"r"))==NULL) {
 		perror("While opening fdClient for reading ");
 		exit(EXIT_FAILURE);
@@ -110,46 +115,36 @@ void serve_client(int fdClient)
 	out = fdopen(fd2, "w");
 
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
-		if(buffer[0]=='\0'){		/* do not process empty lines */
+		if(buffer[0]=='\0'){				/* do not process empty lines */
 			fprintf(out,"\n"); 
 			fflush(out); 
-			continue;	   /* Process next line */
+			continue;	   			/* Process next line */
 		}
 		NormaliseUTF8(buffer);		/* UTF8 tolower + punctuation removal */
-		strcpy(invbuffer, buffer);
-
-		//printf("**%s**\n", invbuffer);
-		current=invbuffer;			/* initialize current character */
-		current=skip_blanks(current);
-		AtLeastOneTerm=FALSE;
-		posword=0;
-		while(sscanf(current,"%s", word)!=EOF) { /* For each possible term beginning */
-			eterm=FindLonguestTerm(current);
-			if(eterm==NULL){	/* Next word */
-				current+= strlen(word)+1;
-				current=skip_blanks(current);
-				posword++;
-			}
-			else {	/* A term was found */
-				AtLeastOneTerm=TRUE;
-				strncpy(term, current, eterm-current);
-				term[eterm-current]='\0';
-				while(term[strlen(term)-1]==' '||term[strlen(term)-1]=='\n') /* remove trailing blanks */
-					term[strlen(term)-1]='\0';
-				term[strlen(term)]='\0';
-				pos=OffsetWordNumber(buffer,CountWords(buffer)-CountWords(term)-posword);
-				posword=posword+CountWords(term);
-				//printf("Original term: *%s*\n", term);
-				InverseWords(term);
-				printf("Sending %d, \"%s\" posword %d %d %d\n", pos, term, CountWords(buffer),CountWords(term),posword);
-				fprintf(out, "%d,\t\"%s\"\n", pos, term);	
-				fflush(out);		
-				current=eterm;
-				current=skip_blanks(current);	
-			}
-		}
-		if(!AtLeastOneTerm)
-			fprintf(out,"\n"); 
+		WordStart=buffer;		/* initialize current character */
+		do{
+			Start=0;
+			CurrentTerm[0]='\0';
+			nwords=0;
+			WordStart=skip_blanks(WordStart);
+			Start=buffer-WordStart;
+			do{
+				WordStart=skip_blanks(WordStart);
+				WordEnd=find_word_end(WordStart);
+				End=buffer-WordEnd;
+				strncat(CurrentTerm, WordStart, WordEnd-WordStart);
+				nwords++;
+				if(strcmp(LookupTable[cmph_search(hash, CurrentTerm, (cmph_uint32)strlen(CurrentTerm))], CurrentTerm)==0){
+					fprintf(out, "%u %u \"%s\"\n", Start, End, CurrentTerm);
+					AtLeastOneTerm=TRUE;
+				}
+				if(!AtLeastOneTerm)
+					fprintf(out,"\n");
+				WordStart=WordEnd+1;
+				if(*WordStart!='\n')
+					strcat(CurrentTerm, " "); 
+			}while(*WordStart!='\n' && nwords<MaxWordsPerTerm);
+		}while(*WordStart!='\n');
 		fprintf(out,"\n"); /* end of response */
 		fflush(out); 
 	}		

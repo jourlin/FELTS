@@ -53,12 +53,12 @@
 #define DEFAULT_HASH_FN "./dic/sample.mph"
 #define FATAL(err) { perror((char *) err); exit(1);}
 
-
+#define BUFFERMAXLENGTH	(1024*1024)
 #define TRUE 		1
 #define FALSE		0
 
 extern unsigned char **LookupTable;
-
+extern unsigned long int NDistinctTerms, MaxWordsPerTerm, MaxCharsPerTerm;
 extern void serve_client (int fd_client);
 extern void send_terms (char textin[]);
 extern void failure(char textin[]);
