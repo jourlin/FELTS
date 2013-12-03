@@ -158,7 +158,7 @@ int demarrer_serveur(int numero_port, char repertoire[])
      int fd_client;
      struct sigaction action_fin;
 
-     printf("> Serveur " VERSION " (threads) "
+     printf("> Serveur " VERSION " "
             "(port=%d, dict=\"%s\")\n",
             numero_port, repertoire);
 

@@ -58,7 +58,7 @@
 
 cmph_t *hash ;
 unsigned long int NDistinctTerms=0, MaxWordsPerTerm=0, MaxCharsPerTerm=0;
-unsigned char **LookupTable;
+char **LookupTable;
 	
 void error(const char *msg)
 {
@@ -90,14 +90,14 @@ int main(int argc, char *argv[])
 	int   port 	= DEFAULT_PORT;
      	char *hash_fn 	= DEFAULT_HASH_FN;	/* dictionary file */
 	char c;
-	int i;
 	NDistinctTerms=0;
 	WordsPerTerm=0;
 	CharsPerTerm=0;
 	FILE *DictFile;
 	char *DictFileName;
 	char *term;
-
+	cmph_uint32 HashIndex;
+	unsigned long i;
      	while ((c = getopt(argc, argv, "hp:d:f:")) != -1)
           switch (c) {
           	case 'h':
@@ -158,31 +158,43 @@ int main(int argc, char *argv[])
 
 	/* Load the minimal perfect hash function */
 	hash = cmph_load(MPHFFile); 	
-	LookupTable=(unsigned char **) malloc(NDistinctTerms*sizeof(unsigned char*));
-	for(i=0;i<NDistinctTerms;i++){			/* Make empty strings */
-		LookupTable[i]=(char *) malloc(MaxCharsPerTerm*sizeof(unsigned char));
-		LookupTable[i][0]='\0';
-	}
-	term=(char *) malloc(MaxCharsPerTerm*sizeof(unsigned char));
+	printf("Hash Function loaded\n");
+
+	if((LookupTable=(char **) malloc(NDistinctTerms*sizeof(char*))) == NULL)
+		FATAL("Error : Out of memory\n");
+	for(i=0; i<NDistinctTerms; i++)
+		LookupTable[i]=NULL;
+	term=(char *) malloc(MaxCharsPerTerm*sizeof(char));
+	if(term==NULL)
+		FATAL("Error : Out of memory\n");
 	if((DictFile=fopen(DictFileName, "r"))==NULL)
 	{
 		fprintf(stderr, "Could not open %s\n", DictFileName);
 		exit(-1);
-	}
+	};
 	while(!feof(DictFile)){				/* Load dictionary in RAM 	*/
-		fgets(term, MaxCharsPerTerm*sizeof(unsigned char), DictFile);
+		if(fgets(term, MaxCharsPerTerm*sizeof(char), DictFile)==NULL)
+			break;
 		term[strlen(term)-1]=0;			/* Replace \n by \0		*/
-		strcpy(LookupTable[cmph_search(hash, term, (cmph_uint32)strlen(term))],term);		
+		HashIndex=cmph_search(hash, term, (cmph_uint32)strlen(term));
+		if((LookupTable[HashIndex]=(char *) malloc((strlen(term)+1)*sizeof(char))) == NULL)
+			FATAL("Error : Out of memory\n");
+		strcpy(LookupTable[HashIndex],term);		
 	}
 	fclose(DictFile);
-	printf("Hash Function loaded\n");
-	
-	
+	for(i=0; i<NDistinctTerms; i++)
+		if(LookupTable[i]==NULL){
+			if((LookupTable[i]=(char *) malloc(sizeof(char))) == NULL){
+				FATAL("Error : Out of memory\n");
+			}
+			else
+				LookupTable[i][0]=0; 			/* Fill holes with empty strings */
+		};
 	demarrer_serveur(port, DictFileName);
 	/* Destroy hash */
       	cmph_destroy(hash);
 	fclose(MPHFFile);
     	exit(EXIT_SUCCESS);
-     	return; 
+     	return 0; 
 }
 		

@@ -54,12 +54,12 @@
 #include "felts.h"
 
 
-void NormaliseUTF8(unsigned char *buffer)
+void NormaliseUTF8(char *buffer)
 {
-	static unsigned char from[]= "\047.;,:!?\042ABCDEFGHIJKLMNOPQRSTUVWXYZÅÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ";
-	static unsigned char to[]=         "        abcdefghijklmnopqrstuvwxyzåâáàäêéèëïíîöóôöúùûñç";
-	unsigned char in[5];
-	unsigned char *where;
+	static char from[]= "\047.;,:!?\042ABCDEFGHIJKLMNOPQRSTUVWXYZÅÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ";
+	static char to[]=         "        abcdefghijklmnopqrstuvwxyzåâáàäêéèëïíîöóôöúùûñç";
+	char in[5];
+	char *where;
 	unsigned int nbytes, i;
 	
 	while(*buffer!='\0')	{
@@ -82,14 +82,14 @@ void NormaliseUTF8(unsigned char *buffer)
 		
 }
 
-unsigned char * skip_blanks(unsigned char *s)
+char * skip_blanks(char *s)
 {
 	while(*s==' '||*s=='\t')
 		s++;
 	return s;
 }
 
-unsigned char * find_word_end(unsigned char *s)
+char * find_word_end(char *s)
 {
 	while(*s!=' ' && *s!='\t' && *s!='\n')
 		s++;
@@ -99,25 +99,21 @@ unsigned char * find_word_end(unsigned char *s)
 void serve_client(int fdClient)
 {
 	FILE * in, * out;
-	unsigned char *WordStart, *WordEnd, *TermStart;
+	char *WordStart, *WordEnd, *TermStart;
 	unsigned int Start, End, nwords;
-	unsigned char buffer[BUFFERMAXLENGTH];
-	unsigned char CurrentTerm[BUFFERMAXLENGTH];
+	char buffer[BUFFERMAXLENGTH];
+	char CurrentTerm[BUFFERMAXLENGTH];
   	cmph_uint32 HashIndex;
   	int fd2;
   	int AtLeastOneTerm;
-  	if((in  = fdopen(fdClient,"r"))==NULL) {
-		perror("While opening fdClient for reading ");
-		exit(EXIT_FAILURE);
-	}
+  	if((in  = fdopen(fdClient,"r"))==NULL)
+		FATAL("While opening fdClient for reading ");
 	fd2 = dup(fdClient);
 	out = fdopen(fd2, "w");
 
 	while(fgets(buffer,BUFFERMAXLENGTH,in) != NULL) {	/* read the text, line after line */
-		if(buffer[strlen(buffer)-1]!='\n'){
-			fprintf(stderr, "Error: line too long\n");
-			exit(-1);
-		}
+		if(buffer[strlen(buffer)-1]!='\n')
+			FATAL("Error: line too long\nIncrease BUFFERMAXLENGTH in felts.h and recompile\n");
 		if(buffer[0]=='\0'){				/* do not process empty lines */
 			fprintf(out,"\n"); 
 			fflush(out); 
@@ -140,7 +136,7 @@ void serve_client(int fdClient)
 				strncat(CurrentTerm, WordStart, WordEnd-WordStart+1);
 				nwords++;
 				HashIndex=cmph_search(hash, CurrentTerm, (cmph_uint32)strlen(CurrentTerm));
-				if(HashIndex<=NDistinctTerms && strcmp(LookupTable[HashIndex], CurrentTerm)==0){
+				if(HashIndex<NDistinctTerms && strcmp(LookupTable[HashIndex], CurrentTerm)==0){
 					fprintf(out, "%u %u \"%s\"\n", Start, End, CurrentTerm);
 					AtLeastOneTerm=TRUE;
 				}

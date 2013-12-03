@@ -47,17 +47,19 @@
 #include <cmph.h>		// http://cmph.sourceforge.net/ (LGPL / MPL 1.1.)
 
 #define CRLF "\r\n"
-#define VERSION "FELTS 0.0.0"
+#define VERSION "FELTS 2.0 (threads+ hash-based)"
 #define DEFAULT_PORT 8000
 #define DEFAULT_DIC "./dic/sample.dic"
 #define DEFAULT_HASH_FN "./dic/sample.mph"
 #define FATAL(err) { perror((char *) err); exit(1);}
 
-#define BUFFERMAXLENGTH	(1024*1024)
+#define BUFFERMAXLENGTH	(1024*1024)			// Can be increased. 
+							// However one hardly imagine a langage where a single proposition
+							// exceeds 1 million characters
 #define TRUE 		1
 #define FALSE		0
 
-extern unsigned char **LookupTable;
+extern char **LookupTable;
 extern unsigned long int NDistinctTerms, MaxWordsPerTerm, MaxCharsPerTerm;
 extern void serve_client (int fd_client);
 extern void send_terms (char textin[]);
@@ -65,5 +67,6 @@ extern void failure(char textin[]);
 extern void invalid_request();
 extern int  tcp_server (int port_number);
 extern int  wait_client (int fd_server);
+int demarrer_serveur(int numero_port, char repertoire[]);
 extern int HASH;
 extern cmph_t *hash ;
