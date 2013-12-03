@@ -1,1 +1,1 @@
-- Allow simultaneous requests by several clients
+- Improve memory allocation : checks + minimal size
