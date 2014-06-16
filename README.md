@@ -11,10 +11,11 @@ USE :
 
 - create a dictionnary file with a sorted list of multiword terms (one term per line, one space between words).
 - set the DICT variable in makefile to your dictionnary file 
+- make the executable files : mkdir bin ; make 
 - make the hash function : 
 > make mph
 - start a server, e.g : 
-> bin/felts_server -p 11111 -d sample.dic -f sample.mph
+> bin/felts_server -p 11111 -d dic/sample.dic -f dic/sample.mph
 - extract terms, e.g. : 
 > cat text_in.txt | sed 's/[[:space:]][[:space:]]*/ /g' | sed 's/^[[:space:]]//' | bin/felts_client localhost 11111 | sed '/^$/d' > terms_out.txt
 
