@@ -13,7 +13,7 @@ USE :
           - for example :
           - wget https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2
           - bunzip2 https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2
-          - egrep -o '\[\[[^]]*\]\]' frwiki-20140108-pages-articles-multistream.xml | egrep -v "\[\[[^:]:[^:]" | sed 's:\[\[::g' | sed 's:.*|::' | sed 's:\]\]::g' | egrep -v "Catégorie:" | sort -u > dic/sample.dic
+          - egrep -o '\[\[[^]]*\]\]' frwiki-20140108-pages-articles-multistream.xml | egrep -v "\[\[[^:]:[^:]" | sed 's:\[\[::g' | sed 's:.*|::' | sed 's:\]\]::g' | egrep -v "Category:" | sort -u > dic/sample.dic
           (This will create in dic/sample.dic a list of all terms in english wikipedia articles that are linked explicitly to wikipedia pages.
 - set the DICT variable in makefile to your dictionnary file 
 - make the executable files : mkdir bin ; make 
