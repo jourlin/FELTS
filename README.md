@@ -27,4 +27,8 @@ USE :
 WARNING : input text should be utf-8, lower case, without punctuation and words must be separated by a single space.
           (that justifies the sequence of filters used before sending the text to felts_client)
 
+===
+Note : Making of the dictionnary of all words used in en+es+fr wikipedia :
+===
+cat enwiki-20160601-pages-articles-multistream.xml frwiki-20160601-pages-articles-multiream.xml eswiki-20160601-pages-articles-multistream.xml | egrep -o " [A-Za-zÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇâáàäêéèëïíîöóôöúùûñç]* " | sed 's/^ //' | sed 's/ $//' | tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' | sort -u > en+es+fr+wiki-20160601.dic
 
