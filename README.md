@@ -31,6 +31,7 @@ WARNING : input text should be utf-8, lower case, without punctuation and words 
 Note : Making of the dictionnary of all words used in en+es+fr wikipedia :
 ===
 cat enwiki-20160601-pages-articles-multistream.xml frwiki-20160601-pages-articles-multiream.xml eswiki-20160601-pages-articles-multistream.xml | egrep -o " [A-Za-zÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇâáàäêéèëïíîöóôöúùûñç]* " | sed 's/^ //' | sed 's/ $//' | tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' | sort -u > en+es+fr+wiki-20160601.dic
-===
+---
 Remove accents :
+---
 cat enwiki-20160601-pages-articles-multistream.xml frwiki-20160601-pages-articles-multiream.xml eswiki-20160601-pages-articles-multistream.xml | egrep -o " [A-Za-zÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇâáàäêéèëïíîöóôöúùûñç]* " | sed 's/^ //' | sed 's/ $//' | tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zaaaaeeeeiiioooouuunc' | sort -u > en+es+fr+wiki-20160601.dic
