@@ -1,0 +1,2 @@
+- Use download.sh to obtain dictionnaries form all wikipedia's dump at a given date (variable d)
+- Use process_clef.sh to indentify the language used for each twitter message in a collection.
