@@ -42,6 +42,9 @@ do
 psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, count(*) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
 
+# Automatically choose a language (the one where words are the most frequent) for each tweet : 
+CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting ORDER BY tweet_id ASC, number DESC ;
+
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
 
