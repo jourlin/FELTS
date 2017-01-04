@@ -44,6 +44,8 @@ done
 
 # Automatically choose a language (the one where words are the most frequent) for each tweet : 
 CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting ORDER BY tweet_id ASC, number DESC ;
+# How many correct identifications out of 1000 tweets :
+select count(*) FROM (SELECT * FROM microblog where id<=1000) AS x, auto_lang WHERE tweet_id<=1000 AND id=tweet_id AND x.lang=auto_lang.lang;
 
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
