@@ -42,11 +42,11 @@ do
 psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, count(*) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
 
-# Automatically choose a language (the one where words are the most frequent) for each tweet : 
-CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting ORDER BY tweet_id ASC, number DESC ;
-# How many correct identifications out of 1000 tweets :
-select count(*) FROM (SELECT * FROM microblog where id<=1000) AS x, auto_lang WHERE tweet_id<=1000 AND id=tweet_id AND x.lang=auto_lang.lang;
-
+# Automatically choose a language (the one where words are the most frequent) for a million tweets : 
+DROP TABLE IF EXISTS auto_lang;
+CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, number DESC ;
+# How many correct identifications out of a million tweets :
+select count(*)*100/1000000||'%' AS correct FROM (SELECT * FROM microblog where id<=1000000) AS x, auto_lang WHERE tweet_id<=1000000 AND id=tweet_id AND x.lang=auto_lang.lang;
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
 
