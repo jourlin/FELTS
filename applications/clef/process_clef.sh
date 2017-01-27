@@ -24,7 +24,7 @@ psql -dclef -c "UPDATE microblog SET lang='00' WHERE lang='xx-lc' OR lang='Selec
 # cat  data/clef_microblogs_festival.content.txt | sed 's/[[:space:]][[:space:]]*/ /g' | sed 's/^[[:space:]]//' | bin/felts_client localhost 11111 | sed '/^$/d'| sed 's:,\t:,:' |sed 's: :\,:g' > data/clef_microblogs_festival.csv
 # psql -dclef -c "CREATE TABLE term(tweet_id bigint, start bigint, \"end\" bigint, term text);"
 # psql -dclef -c "COPY term FROM '/home/jourlin/Recherche/FELTS/clef/data/clef_microblogs_festival.csv' DELIMITER ',' CSV;"
-
+# psql -dclef -c "UPDATE  term set term=replace(term, ',', ' ');"
 
 #psql -dclef -c "DROP TABLE dictionaries;"
 #psql -dclef -c "CREATE TABLE dictionaries (id integer, lang character varying(15), term text);"
