@@ -35,12 +35,9 @@ do
 #    psql -dclef -c "UPDATE dictionaries SET id="$nb"1, lang='"$l"' WHERE id IS NULL AND lang IS NULL;"
     nb=$(($nb+1))
 done
-# Problem with term "cest" (i.e. Central European Summer Time, in many languages. 
-# i.e. "cest" occurs 244012 times in the ceb dictionary !!!
-psql -dclef -c "DELETE FROM dictionaries WHERE term='cest';"
-# problem with term 'au' in esperanto (eo) : 37758 occurences !
-psql -dclef -c "DELETE FROM dictionaries WHERE lang='eo' AND term='au';"
 
+# Delete suspiciously highly frequent word from dictionaires : 
+psql -dclef -c "DELETE FROM dictionaries WHERE freq >10000;"
 #psql -dclef -c "DROP TABLE counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
 for((i=0;i<70000000;i+=100000))
