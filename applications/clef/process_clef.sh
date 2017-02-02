@@ -38,15 +38,22 @@ done
 
 # Delete suspiciously highly frequent word from dictionaires : 
 psql -dclef -c "DELETE FROM dictionaries WHERE freq >10000;"
+# Calculate total frequencies per language for future normalisation
+psql -dclef -c "DROP TABLE IF EXISTS total_occurences;"
+psql -dclef -c "CREATE TABLE total_occurences AS SELECT lang, avg(freq) AS total_occ FROM dictionaries GROUP BY lang;"
 #psql -dclef -c "DROP TABLE counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
 for((i=0;i<70000000;i+=100000))
 do
 psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, sum(freq) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
+# Normalize the occurences numbers
+psql -dclef -c "ALTER TABLE counting ADD COLUMN normalized  double precision;"
+psql -dclef -c "UPDATE counting SET normalized=CAST(number AS double precision)/total_occ FROM total_occurences WHERE counting.lang=total_occurences.lang;"
+
 # Automatically choose a language (the one where words are the most frequent) for a million tweets : 
 DROP TABLE IF EXISTS auto_lang;
-CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, number DESC ;
+CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, normalized DESC ;
 # How many correct identifications out of a million tweets :
 select count(*)*100/1000000||'%' AS correct FROM (SELECT * FROM microblog where id<=1000000) AS x, auto_lang WHERE tweet_id<=1000000 AND id=tweet_id AND x.lang=auto_lang.lang;
 # List of languages ranked by most used
