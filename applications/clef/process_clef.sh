@@ -38,6 +38,8 @@ done
 # Problem with term "cest" (i.e. Central European Summer Time, in many languages. 
 # i.e. "cest" occurs 244012 times in the ceb dictionary !!!
 psql -dclef -c "DELETE FROM dictionaries WHERE term='cest';"
+# problem with term 'au' in esperanto (eo) : 37758 occurences !
+psql -dclef -c "DELETE FROM dictionaries WHERE lang='eo' AND term='au';"
 
 #psql -dclef -c "DROP TABLE counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
