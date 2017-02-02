@@ -35,15 +35,16 @@ do
 #    psql -dclef -c "UPDATE dictionaries SET id="$nb"1, lang='"$l"' WHERE id IS NULL AND lang IS NULL;"
     nb=$(($nb+1))
 done
+# Problem with term "cest" (i.e. Central European Summer Time, in cebuano (ceb) language. 
+# "cest" occurs 244012 times in the ceb dictionary !!!
+DELETE FROM dictionaries WHERE lang='ceb' AND term='cest'
+
 #psql -dclef -c "DROP TABLE counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
 for((i=30200001;i<100000000;i+=100000))
 do
 psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, count(*) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
-# Problem with term "cest" (i.e. Central European Summer Time, in cebuano (ceb) language. 
-# "cest" occurs 244012 times in the ceb dictionary !!!
-DELETE FROM dictionaries WHERE lang='ceb' AND term='cest'
 # Automatically choose a language (the one where words are the most frequent) for a million tweets : 
 DROP TABLE IF EXISTS auto_lang;
 CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, number DESC ;
