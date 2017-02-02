@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LANGUAGES="en sv ceb de nl fr ru it es war pl vi ja pt zh uk ca fa no ar sh fi hu id ro cs ko sr ms tr eu eo bg min da kk sk hy zh-min-nan he lt hr ce sl et gl nn uz la el be simple vo hi th az ur ka af  als  am  an  arz  ast  azb  ba  bar  bat-smg  be-tarask  bn  bpy  br  bs  bug  ckb  cv  cy  fo  fy  ga  gd  gu  hsb  ht  ia  io  is  jv  kn  ku  ky  lb  li  lmo  lv  map-bms  mg  mk  ml  mn  mr  mrj  my  mzn  nah  nap  nds  ne  new  oc  or  os  pa  pms  pnb  qu  sa  sah  scn  sco  si  sq  su  sw  ta  te  tg  tl  tt  vec  wa  yi  yo  zh-yue hif  mhr  ilo  roa-tara  pam  xmf  eml  sd  ps  nso  bh  se  hak  mi  bcl  diq  nds-nl  gan  glk  vls  rue  bo  wuu  mai  fiu-vro  co  tk  szl  sc  csb  vep  lrc  km  crh  gv  kv  frr  zh-classical  as  so  zea  cdo  lad  ay  stq  udm  kw  nrm  ie  koi  ace  rm  pcd  myv  lij  mt  fur  gn  dsb  dv  cbk-zam  ext  lez  ug  kab  ang  ksh  mwl  ln  gag  sn  frp  gom  pag  pi  nv  av  pfl  xal  krc  haw  kaa  bxr  rw  pdc  to  nov  kl  pap  lo  arc  bjn  olo  kbd  jam  ha  tet  tyv  ki  tpi  ig  na  lbe  roa-rup  jbo  ty  kg  za  mdf  lg  wo  srn ab  ltg  chr  zu  sm  om  bi  tcy  tn  chy  cu  rmy  tw  xh  tum  pih  rn  got  pnt  ss  ch  bm  ady  mo  ts  ny  iu  st  fj  ee  ak  ks  ik  sg  ve  dz  ff  ti  cr"
-
+# Trouble with term "cest" in cebuano (ceb) language. "cest" occurs 244012 times !!!
 cat data/clef_microblogs_festival.txt | cut -f1,4 |sed 's:^[^0-9].*:xxxxxxxxxxxxxxxxxx\t00:'> data/id_lang.csv
 psql -dclef -c"DROP TABLE microblog ;"
 psql -dclef -c"CREATE TABLE microblog (id serial, id_original varchar(32), lang varchar(50));"
@@ -41,7 +41,9 @@ for((i=30200001;i<100000000;i+=100000))
 do
 psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, count(*) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
-
+# Problem with term "cest" (i.e. Central European Summer Time, in cebuano (ceb) language. 
+# "cest" occurs 244012 times in the ceb dictionary !!!
+DELETE FROM dictionaries WHERE lang='ceb' AND term='cest'
 # Automatically choose a language (the one where words are the most frequent) for a million tweets : 
 DROP TABLE IF EXISTS auto_lang;
 CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, number DESC ;
