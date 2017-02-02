@@ -41,9 +41,9 @@ DELETE FROM dictionaries WHERE lang='ceb' AND term='cest'
 
 #psql -dclef -c "DROP TABLE counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
-for((i=30200001;i<100000000;i+=100000))
+for((i=0;i<70000000;i+=100000))
 do
-psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, count(*) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
+psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, lang, sum(freq) FROM term, dictionaries WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=dictionaries.term GROUP BY tweet_id, lang"
 done
 # Automatically choose a language (the one where words are the most frequent) for a million tweets : 
 DROP TABLE IF EXISTS auto_lang;
