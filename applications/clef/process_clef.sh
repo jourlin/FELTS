@@ -49,4 +49,6 @@ CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tw
 select count(*)*100/1000000||'%' AS correct FROM (SELECT * FROM microblog where id<=1000000) AS x, auto_lang WHERE tweet_id<=1000000 AND id=tweet_id AND x.lang=auto_lang.lang;
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
+# List of dictionnaries ranked by number of word occurences :
+SELECT sum(freq), lang FROM dictionaries GROUP BY lang ORDER BY sum(freq) DESC;
 
