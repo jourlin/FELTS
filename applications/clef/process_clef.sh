@@ -40,8 +40,8 @@ done
 psql -dclef -c "DELETE FROM dictionaries WHERE freq >10000;"
 # Calculate total frequencies per language for future normalisation
 psql -dclef -c "DROP TABLE IF EXISTS total_occurences;"
-psql -dclef -c "CREATE TABLE total_occurences AS SELECT lang, avg(freq) AS total_occ FROM dictionaries GROUP BY lang;"
-#psql -dclef -c "DROP TABLE counting;"
+psql -dclef -c "CREATE TABLE total_occurences AS SELECT lang, sum(freq) AS total_occ FROM dictionaries GROUP BY lang;"
+#psql -dclef -c "DROP TABLE IF EXISTS counting;"
 #psql -dclef -c "CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), number BIGINT);"
 for((i=0;i<70000000;i+=100000))
 do
@@ -60,4 +60,6 @@ select count(*)*100/1000000||'%' AS correct FROM (SELECT * FROM microblog where 
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
 # List of dictionnaries ranked by number of word occurences :
 SELECT sum(freq), lang FROM dictionaries GROUP BY lang ORDER BY sum(freq) DESC;
+# compare two languages on a specific tweet :
+SELECT * FROM term, dictionaries as en, dictionaries as fr WHERE term.tweet_id=2 AND term.term=en.term AND term.term=fr.term AND fr.lang='fr' AND en.lang='en' ;
 
