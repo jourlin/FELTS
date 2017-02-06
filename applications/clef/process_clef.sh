@@ -56,7 +56,7 @@ select lang, CAST(count(*) AS FLOAT)*100/(SELECT count(*) FROM microblog WHERE m
 # term frequencies in database :
 CREATE table frequencies AS SELECT term, count(*) as freq FROM term WHERE tweet_id < 100000 GROUP BY term ORDER BY count(*) DESC;
 # probability of language given a term :
-SELECT x.term, lang, CAST(count(*) AS float)/(SELECT count FROM frequencies WHERE frequencies.term=x.term) AS probability FROM (select term, lang from term,microblog WHERE tweet_id=id limit 100000) as x GROUP BY term, lang ORDER BY probability DESC LIMIT 20;
+SELECT x.term, lang, CAST(count(*) AS float)/(SELECT freq FROM frequencies WHERE frequencies.term=x.term) AS probability FROM (select term, lang from term, microblog WHERE tweet_id=id AND tweet_id<100000) as x GROUP BY term, lang ORDER BY probability DESC;
 
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
