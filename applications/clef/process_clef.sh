@@ -44,11 +44,17 @@ psql -dclef -c "INSERT INTO counting (tweet_id, lang, number) SELECT tweet_id, l
 done
 # Normalize the occurences numbers
 
-# Automatically choose a language (the one where words are the most frequent) for a million tweets : 
+# Automatically choose a language (the one where words are the most frequent) for 100,000 tweets : 
 DROP TABLE IF EXISTS auto_lang;
-CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<1000000 ORDER BY tweet_id ASC, normalized DESC ;
-# How many correct identifications out of a million tweets :
-select count(*)*100/1000000||'%' AS correct FROM (SELECT * FROM microblog where id<=1000000) AS x, auto_lang WHERE tweet_id<=1000000 AND id=tweet_id AND x.lang=auto_lang.lang;
+CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<100000 ORDER BY tweet_id ASC, number DESC ;
+# How many correct identifications out of 100,000 tweets :
+select count(*)*100/100000||'%' AS correct FROM (SELECT * FROM microblog where id<=100000) AS x, auto_lang WHERE tweet_id<=100000 AND id=tweet_id AND x.lang=auto_lang.lang;
+# How many correct identifications out of 100,000 tweets (for each language) :
+select x.lang, count(*)*100/(SELECT count(*) FROM microblog WHERE microblog.id<=100000 AND microblog.lang=x.lang) AS correct FROM (SELECT * FROM microblog where id<=100000) AS x, auto_lang WHERE tweet_id<=100000 AND id=tweet_id AND x.lang=auto_lang.lang GROUP BY x.lang ORDER BY correct DESC ;
+# Language distribution according to locale :
+select lang, CAST(count(*) AS FLOAT)*100/(SELECT count(*) FROM microblog WHERE microblog.id<=100000) AS "% tweets" FROM microblog WHERE id<=100000 GROUP BY lang ORDER BY "% tweets" DESC ;
+# term frequencies in database :
+CREATE table frequencies AS SELECT term, count(*) FROM term WHERE tweet_id < 100000 GROUP BY term ORDER BY count(*) DESC;
 # List of languages ranked by most used
 psql -dclef -c"SELECT lang, count(id) FROM microblog GROUP BY lang ORDER BY count(id) DESC;"
 # List of dictionnaries ranked by number of word occurences :
