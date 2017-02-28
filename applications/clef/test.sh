@@ -32,3 +32,9 @@ SELECT sum(freq), lang FROM dictionaries GROUP BY lang ORDER BY sum(freq) DESC;
 # compare two languages on a specific tweet :
 SELECT * FROM term, dictionaries as en, dictionaries as fr WHERE term.tweet_id=2 AND term.term=en.term AND term.term=fr.term AND fr.lang='fr' AND en.lang='en' ;
 
+# Test on Wikipedia unigram probabilities: 
+ INSERT INTO counting (tweet_id, lang, probsum) SELECT tweet_id, lang, sum(probability) FROM term, probabilities_wiki WHERE tweet_id<100000 AND term.term=probabilities_wiki.term GROUP BY tweet_id, lang;
+ DROP TABLE IF EXISTS auto_lang;CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<100000 ORDER BY tweet_id ASC, probsum DESC ;
+ select count(*)*100/100000||'%' AS correct FROM (SELECT * FROM microblog where id<=100000) AS x, auto_lang WHERE tweet_id<=100000 AND id=tweet_id AND x.lang=auto_lang.lang;
+ select x.lang, count(*)*100/(SELECT count(*) FROM microblog WHERE microblog.id<=100000 AND microblog.lang=x.lang) AS correct FROM (SELECT * FROM microblog where id<=100000) AS x, auto_lang WHERE tweet_id<=100000 AND id=tweet_id AND x.lang=auto_lang.lang GROUP BY x.lang ORDER BY correct DESC ;
+ SELECT lang, count(tweet_id) FROM auto_lang GROUP BY lang ORDER BY count(tweet_id) DESC;
