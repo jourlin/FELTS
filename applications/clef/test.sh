@@ -6,9 +6,9 @@ test_to=200000;
 # term frequencies in database :
 CREATE table frequencies AS SELECT term, count(*) as freq FROM term WHERE tweet_id >=$learn_from AND tweet_id<=$learn_to GROUP BY term ORDER BY count(*) DESC;
 # probability of language given a term :
-CREATE TABLE probabilities AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT freq FROM frequencies WHERE frequencies.term=x.term) AS probability FROM (select term, lang from term, microblog WHERE tweet_id=id AND tweet_id<100000) as x GROUP BY term, lang ORDER BY probability DESC;
 CREATE INDEX term_idx ON dictionaries USING hash (term);
-CREATE TABLE probabilities_wiki AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT sum(freq) FROM dictionaries WHERE dictionaries.term=x.term) AS probability FROM (select term, lang from dictionaries) as x GROUP BY term, lang ORDER BY probability DESC;
+DROP TABLE IF EXISTS probabilities_mblog ;CREATE TABLE probabilities_mblog AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT freq FROM frequencies WHERE frequencies.term=x.term) AS probability FROM (select term, lang from term, microblog WHERE tweet_id=id) as x GROUP BY term, lang ORDER BY probability DESC;
+DROP TABLE IF EXISTS probabilities_wiki ;CREATE TABLE probabilities_wiki AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT sum(freq) FROM dictionaries WHERE dictionaries.term=x.term) AS probability FROM (select term, lang from dictionaries) as x GROUP BY term, lang ORDER BY probability DESC;
  
 #psql -dclef -c "DROP TABLE IF EXISTS counting;CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), probsum FLOAT);"
 for((i=0;i<70000000;i+=100000))
