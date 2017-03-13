@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS probabilities_mblog ;CREATE TABLE probabilities_mblog AS SE
 DROP TABLE IF EXISTS probabilities_wiki ;CREATE TABLE probabilities_wiki AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT sum(freq) FROM dictionaries WHERE dictionaries.term=x.term) AS probability FROM (select term, lang from dictionaries) as x GROUP BY term, lang ORDER BY probability DESC;
  
 psql -c "DROP TABLE IF EXISTS counting_mblog;CREATE TABLE counting_mblog (tweet_id BIGINT, lang CHARACTER VARYING(15), probsum FLOAT);"
-psql -c "INSERT INTO counting_mblog (tweet_id, lang, probsum) SELECT tweet_id, probabilities_mblog.lang, sum(probability) FROM term, probabilities_mblog, task1, microblog WHERE task1.id_original=CAST(microblog.id_original AS bigint) AND microblog.id=term.tweet_id AND term.term=probabilities_mblog.term GROUP BY tweet_id, probabilities_mblog.lang;"
+psql -c "INSERT INTO counting_mblog (tweet_id, lang, probsum) SELECT tweet_id, probabilities_mblog.lang, sum(probability) FROM term, probabilities_mblog, task1, microblog WHERE task1.id_original=microblog.id_original AND microblog.id=term.tweet_id AND term.term=probabilities_mblog.term GROUP BY tweet_id, probabilities_mblog.lang;"
 
 
 # Automatically choose a language (the one where words are the most frequent) for 100,000 tweets : 
