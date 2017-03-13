@@ -10,11 +10,9 @@ CREATE INDEX term_idx ON dictionaries USING hash (term);
 DROP TABLE IF EXISTS probabilities_mblog ;CREATE TABLE probabilities_mblog AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT freq FROM frequencies WHERE frequencies.term=x.term) AS probability FROM (select term, lang from term, microblog WHERE tweet_id=id) as x GROUP BY term, lang ORDER BY probability DESC;
 DROP TABLE IF EXISTS probabilities_wiki ;CREATE TABLE probabilities_wiki AS SELECT x.term, lang, CAST(count(*) AS float)/(SELECT sum(freq) FROM dictionaries WHERE dictionaries.term=x.term) AS probability FROM (select term, lang from dictionaries) as x GROUP BY term, lang ORDER BY probability DESC;
  
-#psql -dclef -c "DROP TABLE IF EXISTS counting;CREATE TABLE counting (tweet_id BIGINT, lang CHARACTER VARYING(15), probsum FLOAT);"
-for((i=0;i<70000000;i+=100000))
-do
-psql -dclef -c "INSERT INTO counting (tweet_id, lang, probsum) SELECT tweet_id, lang, sum(probability) FROM term, probabilities WHERE tweet_id>=$i AND tweet_id<($i+100000) AND term.term=probabilities.term GROUP BY tweet_id, lang;"
-done
+psql -c "DROP TABLE IF EXISTS counting_mblog;CREATE TABLE counting_mblog (tweet_id BIGINT, lang CHARACTER VARYING(15), probsum FLOAT);"
+psql -c "INSERT INTO counting_mblog (tweet_id, lang, probsum) SELECT tweet_id, probabilities_mblog.lang, sum(probability) FROM term, probabilities_mblog, task1, microblog WHERE task1.id_original=CAST(microblog.id_original AS bigint) AND microblog.id=term.tweet_id AND term.term=probabilities_mblog.term GROUP BY tweet_id, probabilities_mblog.lang;"
+
 
 # Automatically choose a language (the one where words are the most frequent) for 100,000 tweets : 
 DROP TABLE IF EXISTS auto_lang;CREATE TABLE auto_lang AS SELECT DISTINCT ON (tweet_id) * from counting WHERE tweet_id<100000 ORDER BY tweet_id ASC, probsum DESC ;
