@@ -19,7 +19,7 @@ psql -dclef -c "UPDATE microblog SET lang='00' WHERE lang='xx-lc' OR lang='Selec
 
 # TASK1 MC2 CLEF 2017
 cut -f1,1 clef_mc2_task1_topics.txt > task1.csv
-psql -c "DROP TABLE IF EXISTS task1; CREATE TABLE task1 (id_original BIGINT);"
+psql -c "DROP TABLE IF EXISTS task1; CREATE TABLE task1 (id_original VARCHAR(32));"
 psql -c "COPY task1(id_original) FROM '/home/jourlin/Recherche/FELTS/clef/data/task1.csv' DELIMITER E'\t' CSV"
 
 
