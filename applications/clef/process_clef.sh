@@ -18,8 +18,8 @@ psql -dclef -c "UPDATE microblog SET lang='th' WHERE lang='th_th'";
 psql -dclef -c "UPDATE microblog SET lang='00' WHERE lang='xx-lc' OR lang='Select Lan' OR lang='Sélection' OR lang='Selecionar' OR lang='选择语' OR lang='Selecciona' OR lang='選擇語' OR lang='言語を' OR lang='Seleziona' OR lang='Pilih Baha' OR lang='Sprache au' OR lang='เลื' OR lang='Selecione' OR lang='Seleccione' OR lang='Selecteer' OR lang='언어 선' OR lang='lolc' OR lang='Wybierz j' OR lang='Επιλο ' OR lang='Dil Seç..'";
 
 # TASK1 MC2 CLEF 2017
-cut -f1,1 clef_mc2_task1_topics.txt > task1.csv
-psql -c "DROP TABLE IF EXISTS task1; CREATE TABLE task1 (id_original VARCHAR(32));"
+cut -f1,11 data/clef_mc2_task1_topics.txt > task1.csv
+psql -c "DROP TABLE IF EXISTS task1; CREATE TABLE task1 (id_original VARCHAR(32), content VARCHAR(200));"
 psql -c "COPY task1(id_original) FROM '/home/jourlin/Recherche/FELTS/clef/data/task1.csv' DELIMITER E'\t' CSV"
 
 
