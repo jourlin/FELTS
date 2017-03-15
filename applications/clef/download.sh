@@ -9,10 +9,14 @@ for l in $LANGUAGES
 do
     wget https://dumps.wikimedia.org/${l}wiki/${d}/${l}wiki-${d}-pages-articles-multistream.xml.bz2
     bunzip2 ${l}wiki-${d}-pages-articles-multistream.xml.bz2
-    # Making simple term dictionnaries for FELTS :
+    # Making simple term dictionnaries for FELTS (anchor based):
     # egrep -o '\[\[[^]]*\]\]' ${l}wiki-${d}-pages-articles-multistream.xml | egrep -v "\[\[[^:]:[^:]" | sed 's:\[\[::g' | sed 's:.*|::' | sed 's:\]\]::g' | egrep -v ":" |  tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' |sort|uniq -c|sort -nr | grep -v "      [1-9] " | sed 's:^ *[0-9][0-9]* ::'|sort> ../dic/${l}wiki-${d}-pages-articles-multistream.dic
     
-    # Making dictionnaries including frequencies for language identification :
-    egrep -o '\[\[[^]]*\]\]' ${l}wiki-${d}-pages-articles-multistream.xml | egrep -v "\[\[[^:]:[^:]" | sed 's:\[\[::g' | sed 's:.*|::' | sed 's:\]\]::g' | egrep -v ":" |  tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' |sort|uniq -c|sort -nr | grep -v "      [1-9] " |sort -k2 > ../dic/${l}wiki-${d}-pages-articles-multistream.freq
-    rm ${l}wiki-${d}-pages-articles-multistream.xml
+    # Making dictionnaries including frequencies for language identification (anchor based):
+    #egrep -o '\[\[[^]]*\]\]' ${l}wiki-${d}-pages-articles-multistream.xml | egrep -v "\[\[[^:]:[^:]" | sed 's:\[\[::g' | sed 's:.*|::' | sed 's:\]\]::g' | egrep -v ":" |  tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' |sort|uniq -c|sort -nr | grep -v "      [1-9] " |sort -k2 > ../dic/${l}wiki-${d}-pages-articles-multistream.freq
+    #rm ${l}wiki-${d}-pages-articles-multistream.xml
+    xml2 <${l}wiki-${d}-pages-articles-multistream.xml > ${l}wiki-${d}-pages-articles-multistream.txt
+    grep "text=" ${l}wiki-${d}-pages-articles-multistream.txt |sed 's:.*text=::' | sed 's:[^\[]*|::g' | sed 's:\[\[::g'|sed 's:\]\]::g'|sed 's:[{}]::g'|tr 'A-ZÂÁÀÄÊÉÈËÏÍÎÖÓÔÖÚÙÛÑÇ' 'a-zâáàäêéèëïíîöóôöúùûñç' |tr '\t ' '\n'|sort|uniq -c|sort -nr | grep -v "      [1-9] " |sort -k2 > ../dic/${l}wiki-${d}-pages-articles-multistream.freq
+    
+    
 done
