@@ -169,3 +169,10 @@ ALTER TABLE ONLY text
 --
 -- PostgreSQL database dump complete
 --
+
+-- Table Terms contains the extration of source and destination of all internal links  (e.g. [[named entity (hypernym)|named entity]])
+CREATE TABLE Terms AS SELECT * FROM (SELECT DISTINCT old_id, lower(rtrim(replace(regexp_split_to_table(link, E'[\\[\\]\\|\\(\\)\\]]'), 'Catégorie:',''))) as term  FROM (SELECT old_id, unnest(regexp_matches(line, '\[\[[^\]]*\]\]', 'g')) as link FROM 
+   (SELECT old_id, regexp_split_to_table(old_text, E'\\n') as line FROM 
+       (SELECT old_id, old_text FROM text) as X) as Y) as Z 
+ ORDER BY term ASC) as A WHERE term !=''
+ 
