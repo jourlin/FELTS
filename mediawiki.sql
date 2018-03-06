@@ -180,3 +180,10 @@ where p.page_id=r.rev_page AND r.rev_id=t.old_idOM text) as X) as Y) as Z
 -- Get all the terms related to a specified page_title :
 SELECT page_title, term FROM (SELECT * FROM page WHERE page_title='My_page_title') as p, revision as r, terms as t
 where p.page_id=r.rev_page AND r.rev_id=t.old_id
+
+-- Get some categories :
+select * FROM 
+(SELECT DISTINCT substring(page_title from '_\((.*)\)') as category
+FROM page 
+WHERE position('_(' in page_title)!=0
+) as cat WHERE category LIKE 'a%' LIMIT 10
