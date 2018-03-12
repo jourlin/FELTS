@@ -203,3 +203,21 @@ p.page_id=r.rev_page
 AND 
 r.rev_text_id=A.old_id
 -- 
+-- Category table level 2 ( cat_s stands for more specific and cat_g for more general)
+CREATE TABLE entity_cat2 AS SELECT DISTINCT c2.entity as cat_s, c2.cat as cat_g
+FROM 
+entity_cat as c1,
+entity_cat as c2
+WHERE 
+c1.cat=c2.entity
+AND 
+c2.cat!=c2.entity
+--
+CREATE TABLE entity_cat3 AS SELECT DISTINCT c2.cat_s, c2.cat_g
+FROM 
+entity_cat2 as c1,
+entity_cat2 as c2
+WHERE 
+c1.cat_g=c2.cat_s
+AND c2.cat_s!=c2.cat_g
+-- and so on...
