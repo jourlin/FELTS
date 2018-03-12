@@ -204,7 +204,7 @@ AND
 r.rev_text_id=A.old_id
 -- 
 -- Category table level 2 ( cat_s stands for more specific and cat_g for more general)
-CREATE TABLE cat2 AS 
+CREATE TABLE entity_cat2 AS 
 SELECT DISTINCT c2.entity as cat_s, c2.cat as cat_g
 FROM 
 entity_cat as c1,
@@ -214,12 +214,5 @@ c1.cat=c2.entity
 AND 
 -- Exclude reflexivity
 c2.cat!=c2.entity;
-CREATE TABLE cat_s2 AS SELECT cat_s FROM cat2;
--- Exclude loops
-CREATE TABLE entity_cat2 AS SELECT cat_s, cat_g FROM cat2 WHERE cat_g NOT IN 
-(SELECT cat_s FROM cat_s2)
-DROP TABLE cat2;
-DROP TABLE cat_s2;
---
 
 -- and so on...
