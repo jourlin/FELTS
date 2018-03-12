@@ -208,12 +208,14 @@ r.rev_text_id=A.old_id
 CREATE TABLE links AS SELECT DISTINCT lower(translate(entity, '_', ' ')) as spe, lower(translate(cat, '_', ' ')) as gen FROM entity_cat;
 ALTER TABLE links ADD Primary Key (spe, gen);
 
-SELECT distinct l0.spe as "0", l1.spe as "1", l2.spe as "2", l3.spe as "3", l4.spe as "4", l5.spe as "5", l6.spe as "6", l7.spe as "7", l8.spe as "8", l9.spe as "9", l10.spe as "10", l10.gen as "11"
-FROM links as l0, links as l1, links as l2, links as l3, links as l4, links as l5, links as l6, links as l7, links as l8, links as l9, links as l10
-WHERE
+SELECT distinct l0.spe as "0", l1.spe as "1", l2.spe as "2", l3.spe as "3", l4.spe as "4", l5.spe as "5", l6.spe as "6", l7.spe as "7",  l7.gen as "8"
+
+FROM links as l0, links as l1, links as l2, links as l3, links as l4, links as l5, links as l6, links as l7
+
+HERE
+
 l0.gen=l1.spe AND l1.gen=l2.spe AND l2.gen=l3.spe AND l3.gen = l4.spe 
-AND l4.gen=l5.spe AND l5.gen=l6.spe AND l6.gen=l7.spe AND l7.gen=l8.spe 
-AND l8.gen=l9.spe AND l9.gen = l10.spe 
+AND l4.gen=l5.spe AND l5.gen=l6.spe AND l6.gen=l7.spe 
 
 AND l0.gen!=l0.spe
 AND l1.gen!=l1.spe
@@ -251,36 +253,5 @@ AND l7.gen!=l3.spe
 AND l7.gen!=l2.spe
 AND l7.gen!=l1.spe
 AND l7.gen!=l0.spe
-AND l8.gen!=l8.spe
-AND l8.gen!=l7.spe
-AND l8.gen!=l6.spe
-AND l8.gen!=l5.spe
-AND l8.gen!=l4.spe
-AND l8.gen!=l3.spe
-AND l8.gen!=l2.spe
-AND l8.gen!=l1.spe
-AND l8.gen!=l0.spe
-AND l9.gen!=l9.spe
-AND l9.gen!=l8.spe
-AND l9.gen!=l7.spe
-AND l9.gen!=l6.spe
-AND l9.gen!=l5.spe
-AND l9.gen!=l4.spe
-AND l9.gen!=l3.spe
-AND l9.gen!=l2.spe
-AND l9.gen!=l1.spe
-AND l9.gen!=l0.spe
-AND l10.gen!=l10.spe
-AND l10.gen!=l9.spe
-AND l10.gen!=l8.spe
-AND l10.gen!=l7.spe
-AND l10.gen!=l6.spe
-AND l10.gen!=l5.spe
-AND l10.gen!=l4.spe
-AND l10.gen!=l3.spe
-AND l10.gen!=l2.spe
-AND l10.gen!=l1.spe
-AND l10.gen!=l0.spe
-
 
 
