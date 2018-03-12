@@ -181,9 +181,25 @@ where p.page_id=r.rev_page AND r.rev_id=t.old_idOM text) as X) as Y) as Z
 SELECT page_title, term FROM (SELECT * FROM page WHERE page_title='My_page_title') as p, revision as r, terms as t
 where p.page_id=r.rev_page AND r.rev_id=t.old_id
 
--- Get some categories :
+-- Get some manual categories :
 select * FROM 
 (SELECT DISTINCT substring(page_title from '_\((.*)\)') as category
 FROM page 
 WHERE position('_(' in page_title)!=0
 ) as cat WHERE category LIKE 'a%' LIMIT 10
+
+-- Get Semi-Automatic categories search for pattern "est un [[" :
+CREATE TABLE entity_cat AS SELECT translate(lower(p.page_title), '_', ' ') as entity, lower(substring(phrase from 'est (?:un|le|une|la) [^\[]*\[\[([^\|\]]*)')) as cat FROM  
+   (
+SELECT old_id, lower(substring(old_text from E'\'\'\'([^\.]*)')) as phrase 
+    FROM text
+ ) as A,
+revision as r, 
+page as p
+WHERE 
+substring(phrase from 'est (?:un|le|une|la) [^\[]*\[\[([^\|\]]*)') IS NOT NULL
+AND 
+p.page_id=r.rev_page
+AND 
+r.rev_text_id=A.old_id
+-- 
