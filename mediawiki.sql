@@ -212,7 +212,7 @@ SELECT distinct l0.spe as "0", l1.spe as "1", l2.spe as "2", l3.spe as "3", l4.s
 
 FROM links as l0, links as l1, links as l2, links as l3, links as l4, links as l5, links as l6, links as l7
 
-HERE
+WHERE
 
 l0.gen=l1.spe AND l1.gen=l2.spe AND l2.gen=l3.spe AND l3.gen = l4.spe 
 AND l4.gen=l5.spe AND l5.gen=l6.spe AND l6.gen=l7.spe 
@@ -254,4 +254,12 @@ AND l7.gen!=l2.spe
 AND l7.gen!=l1.spe
 AND l7.gen!=l0.spe
 
+-- Find Redirections 
+ SELECT count(*) FROM text WHERE lower(old_text) LIKE '#redirect%'
+-- SELECT DISTINCT old_text FROM page as p, revision as r, text as t
+-- WHERE p.page_is_redirect=1
+-- AND p.page_id=r.rev_page
+-- AND r.rev_id=t.old_id
+-- AND lower(old_text) NOT LIKE '#redirect%'
+-- LIMIT 10
 
